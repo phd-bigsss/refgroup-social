@@ -87,32 +87,53 @@ sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
 elsoc_long_2016_2022.2$percger <-  elsoc_long_2016_2022.2$d03_01+1
 elsoc_long_2016_2022.2$percger <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percger, label = "Perceived Salary: Manager")
 elsoc_long_2016_2022.2$percgerlog <- log(elsoc_long_2016_2022.2$percger)
+elsoc_long_2016_2022.2$percgerlog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgerlog, label = "Perceived Salary: Manager (log)")
+elsoc_long_2016_2022.2$percgerptile <- ntile(elsoc_long_2016_2022.2$percger,100)
+elsoc_long_2016_2022.2$percgerptile <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgerptile, label = "Perceived Salary: Manager (ptiles)")
+
+elsoc_long_2016_2022.2 %>% select(percgerlog,percgerptile,percger) %>% sjPlot::tab_corr(triangle = "lower")
 
 elsoc_long_2016_2022.2$justger <-  elsoc_long_2016_2022.2$d04_01+1
 elsoc_long_2016_2022.2$justger <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justger, label = "Just Salary: Manager")
 elsoc_long_2016_2022.2$justgerlog <- log(elsoc_long_2016_2022.2$justger)
+elsoc_long_2016_2022.2$justgerlog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgerlog, label = "Just Salary: Manager (log)")
+elsoc_long_2016_2022.2$justgerptile <- ntile(elsoc_long_2016_2022.2$justger,100)
+elsoc_long_2016_2022.2$justgerptile <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgerptile, label = "Just Salary: Manager (ptiles)")
+
+
+elsoc_long_2016_2022.2 %>% select(justgerlog,justgerptile,justger) %>% sjPlot::tab_corr(triangle = "lower")
+
 
 elsoc_long_2016_2022.2$percobr <-  elsoc_long_2016_2022.2$d03_02+1
 elsoc_long_2016_2022.2$percobr <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percobr, label = "Perceived Salary: Worker")
 elsoc_long_2016_2022.2$percobrlog <- log(elsoc_long_2016_2022.2$percobr)
+elsoc_long_2016_2022.2$percobrlog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percobrlog, label = "Perceived Salary: Worker (log)")
+elsoc_long_2016_2022.2$percobrptile <- ntile(elsoc_long_2016_2022.2$percobr,100)
+elsoc_long_2016_2022.2$percobrptile <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percobrptile, label = "Perceived Salary: Worker (ptiles)")
+
+
+elsoc_long_2016_2022.2 %>% select(percobr,percobrlog,percobrptile) %>% sjPlot::tab_corr(triangle = "lower")
 
 elsoc_long_2016_2022.2$justobr <-  elsoc_long_2016_2022.2$d04_02+1
 elsoc_long_2016_2022.2$justobr <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justobr, label = "Just Salary: Worker")
-elsoc_long_2016_2022.2$justobrlog <- log(elsoc_long_2016_2022.2$justobr)
+elsoc_long_2016_2022.2$justobrlog <- sjlabelled::set_label(log(elsoc_long_2016_2022.2$justobr),"Just Salary: Worker (log)")
+elsoc_long_2016_2022.2$justobrptile <- sjlabelled::set_label(ntile(elsoc_long_2016_2022.2$justobr,100),"Just Salary: Worker (ptiles)")
 
+elsoc_long_2016_2022.2 %>% select(justobr,justobrlog,justobrptile) %>% sjPlot::tab_corr(triangle = "lower")
 
 elsoc_long_2016_2022.2$percgap <-  elsoc_long_2016_2022.2$percger/elsoc_long_2016_2022.2$percobr
 elsoc_long_2016_2022.2$percgap <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgap, label = "Perceived Salary Gap")
-elsoc_long_2016_2022.2$percgaplog <- log(elsoc_long_2016_2022.2$percgap)
-elsoc_long_2016_2022.2$percgaplog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgaplog, label = "Perceived Salary Gap")
+elsoc_long_2016_2022.2$percgaplog <- sjlabelled::set_label(x = log(elsoc_long_2016_2022.2$percgap), label = "Perceived Salary Gap (log)")
+elsoc_long_2016_2022.2$percgapptile <- sjlabelled::set_label(x = ntile(elsoc_long_2016_2022.2$percgap,100), label = "Perceived Salary Gap (ptiles)")
+
+elsoc_long_2016_2022.2 %>% select(percgap,percgaplog,percgapptile) %>% sjPlot::tab_corr(triangle = "lower")
 
 elsoc_long_2016_2022.2$justgap <-  elsoc_long_2016_2022.2$justger/elsoc_long_2016_2022.2$justobr
 elsoc_long_2016_2022.2$justgap <- sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgap, label = "Just Salary Gap")
 
-elsoc_long_2016_2022.2$justgaplog <- log(elsoc_long_2016_2022.2$justgap)
-elsoc_long_2016_2022.2$justgaplog <- sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgaplog, label = "Just Salary Gap")
-
-
+elsoc_long_2016_2022.2$justgaplog <-  sjlabelled::set_label(x = log(elsoc_long_2016_2022.2$justgap), label = "Just Salary Gap (log)")
+elsoc_long_2016_2022.2$justgapptile <-  sjlabelled::set_label(x = ntile(elsoc_long_2016_2022.2$justgap,100), label = "Just Salary Gap (ptiles)")
+elsoc_long_2016_2022.2 %>% select(justgap,justgaplog,justgapptile) %>% sjPlot::tab_corr(triangle = "lower")
 
 elsoc_long_2016_2022.2$prosocial1 <- 
 sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial1, 
@@ -614,6 +635,46 @@ elsoc_long_2016_2022.2 %>% select(starts_with("isei_")) %>% View
 #         title="Social capital measures") 
 ```
 
+```{r}
+## Heterogeneidad de la RED ------------------------------------------------
+##Ocupaciones
+# calculate the proportion for each occupation and then apply a cuadratic term
+elsoc_long_2016_2022.2$prop_doctor<-((elsoc_long_2016_2022.2$n_doctor/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_ceo<-((elsoc_long_2016_2022.2$n_ceo/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_lawyer<-((elsoc_long_2016_2022.2$n_lawyer/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_univprof<-((elsoc_long_2016_2022.2$n_univprof/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_account<-((elsoc_long_2016_2022.2$n_account/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_secret<-((elsoc_long_2016_2022.2$n_secret/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_shopassi<-((elsoc_long_2016_2022.2$n_shopassi/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_kinder<-((elsoc_long_2016_2022.2$n_kinder/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_waiter<-((elsoc_long_2016_2022.2$n_waiter/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_carmech<-((elsoc_long_2016_2022.2$n_carmech/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_taxi<-((elsoc_long_2016_2022.2$n_taxi/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_stvend<-((elsoc_long_2016_2022.2$n_stvend/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_cleaner<-((elsoc_long_2016_2022.2$n_cleaner/elsoc_long_2016_2022.2$n_total))^2
+
+prop_ocup <- 
+c("prop_doctor","prop_ceo","prop_lawyer","prop_univprof","prop_account",
+"prop_secret","prop_shopassi","prop_kinder","prop_waiter","prop_carmech",
+"prop_taxi","prop_stvend","prop_cleaner")
+
+elsoc_long_2016_2022.2$diversity=1-rowSums(elsoc_long_2016_2022.2[,prop_ocup])
+sjlabelled::set_label(elsoc_long_2016_2022.2$diversity) <- "Network diversity (D-Simpson)"
+
+elsoc_long_2016_2022.2$homogeneity=rowSums(elsoc_long_2016_2022.2[,prop_ocup])
+sjlabelled::set_label(elsoc_long_2016_2022.2$homogeneity) <- "Network Homogeneity (D-Simpson)"
+
+
+elsoc_long_2016_2022.2$prop_upper<-((elsoc_long_2016_2022.2$n_high/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_interm<-((elsoc_long_2016_2022.2$n_middle/elsoc_long_2016_2022.2$n_total))^2
+elsoc_long_2016_2022.2$prop_working<-((elsoc_long_2016_2022.2$n_low/elsoc_long_2016_2022.2$n_total))^2
+
+elsoc_long_2016_2022.2$diversityclass=1-rowSums(elsoc_long_2016_2022.2[,c("prop_upper","prop_interm","prop_working")])
+
+
+```
+
+
 
 ```{r}
 bind_rows(
@@ -688,63 +749,8 @@ elsoc_long_2016_2022.2 %>%
   scale_x_discrete(labels=c("2016","2018","2021")) +
   labs(title = "Network percentage of high, middle and low occupations by year",x="Year",y=NULL) +
   theme()
-```
 
 
-```{r}
-elsoc_long_2016_2022.2 %>% 
-  select(isei_avg,porc_low,porc_middle,porc_high,just_educ,just_salud,just_pension) %>% 
-  sjPlot::tab_corr(triangle = "lower",wrap.labels =25,
-                   var.labels = c("ISEI network","Low-status ties %"," Middle-status ties %"," High-status ties % ","Education","Health","Pensions"),digits = 2)
-
-
-
-elsoc_long_2016_2022.2 %>%
-  filter(ola %in% c(5)) %>%
-  select(isei_avg,porc_low,porc_middle,porc_high,
-         percgerlog,percobrlog,
-         justger,justobr,
-         percgaplog,
-         justgaplog) %>% 
-  sjPlot::tab_corr(triangle = "lower")
-
-
-models1 <- 
-list(lme4::lmer(just_pension~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(just_pension~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(just_pension~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(just_pension~isei_avg + ola + educyear +(1|idencuesta),data = elsoc_long_2016_2022.2)
-     )
-screenreg(models1)
-
-models1 <- 
-list(lme4::lmer(justgaplog~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(justgaplog~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(justgaplog~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(justgaplog~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(justgaplog~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(justgaplog~ isei_avg + ola + educyear + quintil1 +  n_total + percgaplog +(1 + isei_avg|idencuesta),data = elsoc_long_2016_2022.2)
-     )
-
-texreg::screenreg(models1)
-
-elsoc_long_2016_2022.2 %>% 
-  filter(ola==1) %>% 
-  select(starts_with("prosocial")) %>% 
-  sjPlot::tab_corr(triangle = "lower",wrap.labels =25)
-
-
-models1 <- 
-list(lme4::lmer(prosocial5~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(prosocial5~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(prosocial5~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(prosocial5~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(prosocial5~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
-     lme4::lmer(prosocial5~isei_avg + ola + educyear +(1|idencuesta),data = elsoc_long_2016_2022.2)
-     )
-screenreg(models1)
 ```
 
 
@@ -926,7 +932,127 @@ sjlabelled::set_label(x = elsoc_long_2016_2022.2$pos_id,
                       label = "Political identification") 
 
 sjmisc::frq(elsoc_long_2016_2022.2$pos_id)
+```
 
+```{r}
+elsoc_long_2016_2022.2 %>% 
+  select(isei_avg,porc_low,porc_middle,porc_high,just_educ,just_salud,just_pension) %>% 
+  sjPlot::tab_corr(triangle = "lower",wrap.labels =25,
+                   var.labels = c("ISEI network","Low-status ties %"," Middle-status ties %"," High-status ties % ","Education","Health","Pensions"),digits = 2)
+
+elsoc_long_2016_2022.2 %>%
+  filter(ola %in% c(1)) %>%
+  select(isei_avg,diversity,diversityclass,porc_low,porc_middle,porc_high,
+         # percgerlog,percobrlog,
+         # justger,justobr,
+         percgaplog,
+         percgapptile,
+         justgaplog,
+         justgapptile
+         ) %>% 
+  sjPlot::tab_corr(triangle = "lower")
+
+dfreg <- 
+elsoc_long_2016_2022.2 %>%
+  filter(ola %in%c(1,3,5))
+  
+dfreg <- 
+dfreg %>% select(idencuesta,ola,
+                 # just_educ,just_salud,just_pension,
+                 justgapptile,
+                 percgapptile,
+                 porc_high,porc_low,
+                 isei_avg,n_total,
+                 diversity,diversityclass,educyear,quintil1) %>% 
+  arrange(idencuesta)
+
+
+
+
+
+
+df_filter<- data.frame(frq(dfreg$idencuesta)) %>% select(idencuesta=val,frq)
+df_filter$keep <- df_filter$frq>=3
+table(df_filter$keep)
+# 
+dfreg <-  dfreg %>% left_join(df_filter,by = "idencuesta")
+dfreg <-  dfreg %>%  filter(keep=="TRUE")
+table(dfreg$keep)
+
+df_filter<- data.frame(frq(dfreg$idencuesta)) %>% select(idencuesta=val,frq)
+df_filter$keep <- df_filter$frq>=3
+table(df_filter$keep)
+dim(dfreg)
+
+education <- 
+list(
+  # lme4::lmer(just_educ~porc_low +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_educ~ porc_middle + (1|idencuesta),data = dfreg),
+  # lme4::lmer(just_educ~porc_high +(1|idencuesta),data = dfreg),
+  lme4::lmer(just_educ~porc_low + porc_high +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_educ~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_educ~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_educ~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1+educyear|idencuesta),data = dfreg),
+  lme4::lmer(just_educ~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(education)
+
+health <- 
+list(
+  # lme4::lmer(just_salud~porc_low +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_salud~ porc_middle + (1|idencuesta),data = dfreg),
+  # lme4::lmer(just_salud~porc_high +(1|idencuesta),data = dfreg),
+  lme4::lmer(just_salud~porc_low + porc_high +(1|idencuesta),data = dfreg),
+  lme4::lmer(just_salud~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_salud~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_salud~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+     lme4::lmer(just_salud~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(health)
+
+pensions <- 
+list(
+  # lme4::lmer(just_pension~porc_low +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~porc_high +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = dfreg),
+  lme4::lmer(just_pension~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_pension~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(just_pension~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+     lme4::lmer(just_pension~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+     lme4::lmer(just_pension~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(pensions)
+
+salarygaps <- 
+list(
+  # lme4::lmer(just_pension~porc_low +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~porc_high +(1|idencuesta),data = dfreg),
+  # lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = dfreg),
+  lme4::lmer(justgapptile~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(justgapptile~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lme4::lmer(justgapptile~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+     lme4::lmer(justgapptile~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+     lme4::lmer(justgapptile~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(salarygaps)
+
+
+
+
+
+
+
+```
+
+
+
+```{r}
 # Select variables______________________________________________________________
 
 df_study1 <- 

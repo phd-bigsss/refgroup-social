@@ -29,10 +29,8 @@ options(scipen=9999) # desactivar notacion cientifica
 
 ```{r}
 remove(list = ls()) # clean workspace
-# .rs.restartR() #restart R session
 if (!require("pacman")) install.packages("pacman") # install pacman
-# load libraries
-pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here)
+pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2)# load libraries
 load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
 
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-999] <- NA
@@ -40,7 +38,7 @@ elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-888] <- NA
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-777] <- NA
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-666] <- NA
 
-# Attitudes toward inmigrants__________________________________________________
+# Attitudes____________________________________________________________________
 elsoc_long_2016_2022.2 <- 
 elsoc_long_2016_2022.2 %>% 
   #create new variables
@@ -51,76 +49,33 @@ elsoc_long_2016_2022.2 %>%
          gensocialtrust=c02,
          genaltruism=c03,
          genjust=c04,
-         psodonate=c07_05,
-         psoborrow=c07_06,
+         prosocial1=c07_01,
+         prosocial2=c07_02,
+         prosocial3=c07_03,
+         prosocial4=c07_04,
+         prosocial5=c07_05,
+         prosocial6=c07_06,
+         prosocial7=c07_07,
+         prosocial8=c07_08,
          sexo=m0_sexo) %>% 
   sjlabelled::drop_labels(., drop.na = FALSE)
   
-
-
-elsoc_long_2016_2022.2 %>% filter(ola==1)%>% select(starts_with("c07_"),
-                                                    c02,c03,c04,
-                                                    starts_with("d02")) %>% sjPlot::tab_corr(triangle = "lower")
-
 sjmisc::frq(elsoc_long_2016_2022.2$just_educ)
 elsoc_long_2016_2022.2$just_educ <- 
 sjlabelled::set_label(x = elsoc_long_2016_2022.2$just_educ, 
-                      label = "Distributive Justice in Education")
+                      label = "Market-based access to Education")
 
 #
 elsoc_long_2016_2022.2$just_pension <- 
 sjlabelled::set_label(x = elsoc_long_2016_2022.2$just_pension, 
-                      label = "Distributive Justice in Pensions")
+                      label = "Market-based access to Pensions")
 
 #
 elsoc_long_2016_2022.2$just_salud <- 
 sjlabelled::set_label(x = elsoc_long_2016_2022.2$just_salud, 
-                      label = "Distributive Justice in Health")
+                      label = "Market-based access to Health")
 
-#
-elsoc_long_2016_2022.2$des_perc <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$des_perc, 
-                      label = "Perceived income inequality")
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$merit_effort)
-elsoc_long_2016_2022.2$merit_effort <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$merit_effort, 
-                      label = "People are rewarded for their efforts")
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$merit_talent)
-elsoc_long_2016_2022.2$merit_talent <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$merit_talent, 
-                      label = "People are rewarded for their intelligence")
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_family)
-elsoc_long_2016_2022.2$ahead_family <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$ahead_family, 
-                      label = "Coming from a wealthy family") 
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_educ)
-elsoc_long_2016_2022.2$ahead_educ <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$ahead_educ, 
-                      label = "Having a good level of education") 
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_ambition)
-elsoc_long_2016_2022.2$ahead_ambition <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$ahead_ambition, 
-                      label = "Having ambition") 
-
-#
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_hardwork)
-elsoc_long_2016_2022.2$ahead_hardwork <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$ahead_hardwork, 
-                      label = "Hard work")
-
-for (i in c("just_educ", "just_pension", "just_salud", "des_perc",
-            "merit_effort","merit_talent",
-            "ahead_family","ahead_educ","ahead_ambition", "ahead_hardwork")) {
+for (i in c("just_educ", "just_pension", "just_salud")) {
 elsoc_long_2016_2022.2[[i]] <-
 sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
                        labels = c("Strongly disagree","Disagree",
@@ -128,13 +83,672 @@ sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
                                   "Agree", "Strongly agree"))
 }
 
-sjmisc::frq(elsoc_long_2016_2022.2$just_educ)
-sjmisc::frq(elsoc_long_2016_2022.2$merit_effort)
-sjmisc::frq(elsoc_long_2016_2022.2$merit_talent)
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_family)
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_educ)
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_ambition)
-sjmisc::frq(elsoc_long_2016_2022.2$ahead_hardwork)
+
+elsoc_long_2016_2022.2$percger <-  elsoc_long_2016_2022.2$d03_01+1
+elsoc_long_2016_2022.2$percger <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percger, label = "Perceived Salary: Manager")
+elsoc_long_2016_2022.2$percgerlog <- log(elsoc_long_2016_2022.2$percger)
+
+elsoc_long_2016_2022.2$justger <-  elsoc_long_2016_2022.2$d04_01+1
+elsoc_long_2016_2022.2$justger <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justger, label = "Just Salary: Manager")
+elsoc_long_2016_2022.2$justgerlog <- log(elsoc_long_2016_2022.2$justger)
+
+elsoc_long_2016_2022.2$percobr <-  elsoc_long_2016_2022.2$d03_02+1
+elsoc_long_2016_2022.2$percobr <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percobr, label = "Perceived Salary: Worker")
+elsoc_long_2016_2022.2$percobrlog <- log(elsoc_long_2016_2022.2$percobr)
+
+elsoc_long_2016_2022.2$justobr <-  elsoc_long_2016_2022.2$d04_02+1
+elsoc_long_2016_2022.2$justobr <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justobr, label = "Just Salary: Worker")
+elsoc_long_2016_2022.2$justobrlog <- log(elsoc_long_2016_2022.2$justobr)
+
+
+elsoc_long_2016_2022.2$percgap <-  elsoc_long_2016_2022.2$percger/elsoc_long_2016_2022.2$percobr
+elsoc_long_2016_2022.2$percgap <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgap, label = "Perceived Salary Gap")
+elsoc_long_2016_2022.2$percgaplog <- log(elsoc_long_2016_2022.2$percgap)
+elsoc_long_2016_2022.2$percgaplog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percgaplog, label = "Perceived Salary Gap")
+
+elsoc_long_2016_2022.2$justgap <-  elsoc_long_2016_2022.2$justger/elsoc_long_2016_2022.2$justobr
+elsoc_long_2016_2022.2$justgap <- sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgap, label = "Just Salary Gap")
+
+elsoc_long_2016_2022.2$justgaplog <- log(elsoc_long_2016_2022.2$justgap)
+elsoc_long_2016_2022.2$justgaplog <- sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgaplog, label = "Just Salary Gap")
+
+
+
+elsoc_long_2016_2022.2$prosocial1 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial1, 
+                      label = "I visited a neighbor's house")
+
+elsoc_long_2016_2022.2$prosocial2 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial2, 
+                      label = "Attended a meeting on topics of public/community interest")
+
+elsoc_long_2016_2022.2$prosocial3 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial3, 
+                      label = "Friends have visisted their home")
+
+elsoc_long_2016_2022.2$prosocial4 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial4, 
+                      label = "Have done volunteer work")
+
+elsoc_long_2016_2022.2$prosocial5 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial5, 
+                      label = "Has donated money to charity")
+
+elsoc_long_2016_2022.2$prosocial6 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial6, 
+                      label = "Has lent $10,000 or more")
+
+
+elsoc_long_2016_2022.2$prosocial7 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial7, 
+                      label = "Talked to a person in trouble or depressed")
+
+elsoc_long_2016_2022.2$prosocial8 <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial8, 
+                      label = "Helped someone get a job")
+
+
+for (i in c("prosocial1","prosocial2","prosocial3","prosocial4","prosocial5",
+            "prosocial6","prosocial7","prosocial8")) {
+elsoc_long_2016_2022.2[[i]] <-
+sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
+                       labels = c("Never did it","Did it once or twice","Did it more than twice"))
+}
+
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  sjmisc::frq(prosocial1) %>% 
+  as.data.frame() %>% 
+  select(variable, group, label,raw.prc) %>% 
+  na.omit() %>% 
+  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
+  geom_bar(position="stack", stat="identity") +
+  geom_text(size = 4, position = position_stack(vjust = 0.5))
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  sjmisc::frq(prosocial2) %>% 
+  as.data.frame() %>% 
+  select(variable, group, label,raw.prc) %>% 
+  na.omit() %>% 
+  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
+  geom_bar(position="stack", stat="identity") +
+  geom_text(size = 4, position = position_stack(vjust = 0.5))
+
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  sjmisc::frq(just_pension) %>% 
+  as.data.frame() %>% 
+  select(variable, group, label,raw.prc) %>% 
+  mutate(label=factor(label,levels = rev(c("Strongly disagree","Disagree","Neither disagree nor agree","Agree", "Strongly agree")))) %>% 
+  filter(group!=2021) %>% 
+  na.omit() %>% 
+  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
+  geom_bar(position="stack", stat="identity") +
+  labs(title = "It is just that people with higher incomes have better pensions than people with lower incomes.",x="Year",y="Percentage") +
+  geom_text(size = 4, position = position_stack(vjust = 0.5))
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  sjmisc::frq(just_educ) %>% 
+  as.data.frame() %>% 
+  select(variable, group, label,raw.prc) %>% 
+  mutate(label=factor(label,levels = rev(c("Strongly disagree","Disagree","Neither disagree nor agree","Agree", "Strongly agree")))) %>% 
+  na.omit() %>% 
+  filter(group!=2021) %>% 
+  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
+  labs(title = "It is just that people with higher incomes have a better education for their children than people with lower incomes.",x="Year",y="Percentage") +
+  geom_bar(position="stack", stat="identity") +
+  geom_text(size = 4, position = position_stack(vjust = 0.5))
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  sjmisc::frq(just_salud) %>% 
+  as.data.frame() %>% 
+  select(variable, group, label,raw.prc) %>% 
+  mutate(label=factor(label,levels = rev(c("Strongly disagree","Disagree","Neither disagree nor agree","Agree", "Strongly agree")))) %>% 
+  na.omit() %>% 
+  filter(group!=2021) %>% 
+  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
+  labs(title = "It is just that people with higher incomes can access better health care than people with lower incomes.",x="Year",y="Percentage")+
+  geom_bar(position="stack", stat="identity") +
+  geom_text(size = 4, position = position_stack(vjust = 0.5))
+
+
+
+library(ggrepel)
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(market=mean(just_pension,na.rm = T),
+         field="Pensions"),
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(market=mean(just_educ,na.rm = T),
+         field="Education"),
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(market=mean(just_salud,na.rm = T),
+         field="Health")
+
+) %>% na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = market, group=field, color=field)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(1,5),labels = c("Strongly disagree","Disagree","Neither disagree nor agree","Agree", "Strongly agree")) +
+  scale_x_discrete(labels=c("2016","2017","2018","2019","2022")) +
+  labs(title = "Market distribution to social services by year",x="Year",y=NULL)
+
+```
+
+## Networks 
+```{r know}
+
+# for the number of contacts for each occupation, the average value is used.
+
+#"Conoce: Medico o doctor/a" 
+sjmisc::frq(elsoc_long_2016_2022.2$r01_08)
+elsoc_long_2016_2022.2$know_doctor <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_08,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_doctor)
+
+#"Conoce: Gerente o director de gran empresa" (70)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_01)
+elsoc_long_2016_2022.2$know_ceo <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_01,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_ceo)
+
+elsoc_long_2016_2022.2$r01_06 #"Conoce: Abogado/a" (85)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_06)
+elsoc_long_2016_2022.2$know_lawyer <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_06,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_lawyer)
+
+#"Conoce: Profesor/a de universidad" (77)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_13)
+elsoc_long_2016_2022.2$know_univprof <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_13,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_univprof)
+
+# Middle status occupations-----------------------------------------------------
+
+#"Conoce: Contador/a" (60)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_12)
+elsoc_long_2016_2022.2$know_account <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_12,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_account)
+
+#"Conoce: Secretario/a" (53)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_03)
+elsoc_long_2016_2022.2$know_secret <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_03,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_secret)
+
+#"Conoce: Vendedor de tienda o almacen" (43)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_05)
+elsoc_long_2016_2022.2$know_shopassi <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_05,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_shopassi)
+
+#"Conoce: Parvularia" (43)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_09)
+elsoc_long_2016_2022.2$know_kinder <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_09,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_kinder)
+
+# Lower status occupations-----------------------------------------------------
+#"Conoce: Camarero o mozo" (34)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_11)
+elsoc_long_2016_2022.2$know_waiter <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_11,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_waiter)
+
+#"Conoce: Mecanico de autos" (34)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_04)
+elsoc_long_2016_2022.2$know_carmech <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_04,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_carmech)
+
+#"Conoce: Chofer de taxi o colectivo" (30)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_10)
+elsoc_long_2016_2022.2$know_taxi <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_10,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_taxi)
+
+#"Conoce: Vendedor ambulante" (29)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_02)
+elsoc_long_2016_2022.2$know_stvend <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_02,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_stvend)
+
+#"Conoce: Aseador/a de oficina" (16)
+sjmisc::frq(elsoc_long_2016_2022.2$r01_07)
+elsoc_long_2016_2022.2$know_cleaner <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_07,"1=0;2:7=1"))
+sjmisc::frq(elsoc_long_2016_2022.2$know_cleaner)
+
+elsoc_long_2016_2022.2 %>% 
+  select(starts_with("know_")) %>% 
+  names()
+
+# Total of known occupations
+n_ocupnames<- names(select(elsoc_long_2016_2022.2,starts_with("know_")))
+elsoc_long_2016_2022.2$know_total <- rowSums(x = select(elsoc_long_2016_2022.2,n_ocupnames),na.rm = T)
+summary(elsoc_long_2016_2022.2$know_total)
+sjlabelled::set_label(elsoc_long_2016_2022.2$know_total) <- 'Total of known occupations'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$know_total,type = 'density')
+
+# assing labels
+professions <- c("Medical doctor", "Manager of a large firm", "Lawyer",
+                "University Professor", "Accountant", "Secretary", "Shop assistant",
+                "Preschool teacher", "Waiter", "Car mechanic", "Taxi driver",
+                "Street vendor", "Office cleaner","Total")
+labels <- paste0("Know: ",professions)
+vars_tolabel <- names(select(elsoc_long_2016_2022.2 ,starts_with("know_")))
+elsoc_long_2016_2022.2[,c(vars_tolabel)] <- set_label(x = elsoc_long_2016_2022.2[,c(vars_tolabel)],label = labels)
+# elsoc_long_2016_2022.2[,c(vars_tolabel)] %>% View
+```
+
+
+```{r status}
+# Higher status occupations-----------------------------------------------------
+sjmisc::frq(elsoc_long_2016_2022.2$know_doctor)#"Num. Conocidos: Medico o doctor/a" (88)
+elsoc_long_2016_2022.2$isei_doctor <- ifelse(elsoc_long_2016_2022.2$know_doctor==1,88,NA)
+sjmisc::frq(elsoc_long_2016_2022.2$isei_doctor)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_ceo) #"Num. Conocidos: Gerente o director de gran empresa" (70)
+elsoc_long_2016_2022.2$isei_ceo<- ifelse(elsoc_long_2016_2022.2$know_ceo==1,70,NA) #
+sjmisc::frq(elsoc_long_2016_2022.2$isei_ceo)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_lawyer) #"Num. Conocidos: Abogado/a" (85)
+elsoc_long_2016_2022.2$isei_lawyer<- ifelse(elsoc_long_2016_2022.2$know_lawyer==1,70,NA) # #if know, impute 85
+sjmisc::frq(elsoc_long_2016_2022.2$isei_lawyer)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_univprof) #"Num. Conocidos: Profesor/a de universidad" (77)
+elsoc_long_2016_2022.2$isei_univprof<- ifelse(elsoc_long_2016_2022.2$know_univprof==1,77,NA) #  #if know, impute 77
+sjmisc::frq(elsoc_long_2016_2022.2$isei_univprof)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_account) #"Num. Conocidos: Contador/a" (69)
+elsoc_long_2016_2022.2$isei_account<- ifelse(elsoc_long_2016_2022.2$know_account==1,69,NA) # #if know, impute 60
+sjmisc::frq(elsoc_long_2016_2022.2$isei_account)
+
+# Middle status occupations-----------------------------------------------------
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_secret) #"Num. Conocidos: Secretario/a" (53)
+elsoc_long_2016_2022.2$isei_secret<- ifelse(elsoc_long_2016_2022.2$know_secret==1,54,NA) # #if know, impute 53
+sjmisc::frq(elsoc_long_2016_2022.2$isei_secret)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_shopassi) #"Num. Conocidos: Vendedor de tienda o almacen" (43)
+elsoc_long_2016_2022.2$isei_shopassi<- ifelse(elsoc_long_2016_2022.2$know_shopassi==1,43,NA) # #if know, impute 43
+sjmisc::frq(elsoc_long_2016_2022.2$isei_shopassi)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_kinder) #"Num. Conocidos: Parvularia" (43)
+elsoc_long_2016_2022.2$isei_kinder<- ifelse(elsoc_long_2016_2022.2$know_kinder==1,43,NA) # #if know, impute 43
+sjmisc::frq(elsoc_long_2016_2022.2$isei_kinder)
+
+# Lower status occupations-----------------------------------------------------
+sjmisc::frq(elsoc_long_2016_2022.2$know_waiter) #"Num. Conocidos: Camarero o mozo" (34)
+elsoc_long_2016_2022.2$isei_waiter<- ifelse(elsoc_long_2016_2022.2$know_waiter==1,34,NA) #  #if know, impute 34
+sjmisc::frq(elsoc_long_2016_2022.2$isei_waiter)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_carmech)#"Num. Conocidos: Mecanico de autos" (34)
+elsoc_long_2016_2022.2$isei_carmech<- ifelse(elsoc_long_2016_2022.2$know_carmech==1,34,NA) # #if know, impute 34
+sjmisc::frq(elsoc_long_2016_2022.2$isei_carmech)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_taxi) #"Num. Conocidos: Chofer de taxi o colectivo" (30)
+elsoc_long_2016_2022.2$isei_taxi<- ifelse(elsoc_long_2016_2022.2$know_taxi==1,30,NA) #  #if know, impute 30
+sjmisc::frq(elsoc_long_2016_2022.2$isei_taxi)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_stvend)#"Num. Conocidos: Vendedor ambulante" (29)
+elsoc_long_2016_2022.2$isei_stvend<- ifelse(elsoc_long_2016_2022.2$know_stvend==1,29,NA) # #if know, impute 29
+sjmisc::frq(elsoc_long_2016_2022.2$isei_stvend)
+
+sjmisc::frq(elsoc_long_2016_2022.2$know_cleaner) #"Num. Conocidos: Aseador/a de oficina" (16)
+elsoc_long_2016_2022.2$isei_cleaner<- ifelse(elsoc_long_2016_2022.2$know_cleaner==1,16,NA) # #if know, impute 16
+sjmisc::frq(elsoc_long_2016_2022.2$isei_cleaner)
+
+# elsoc %>%
+#   select(idencuesta,starts_with("isei_")) %>%
+#   View
+```
+
+```{r number}
+# for the number of contacts for each occupation, the average value is used.
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_08) #"Num. Conocidos: Medico o doctor/a" 
+elsoc_long_2016_2022.2$n_doctor <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_08,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_doctor)
+table(elsoc_long_2016_2022.2$n_doctor,elsoc_long_2016_2022.2$ola)
+
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_01) #"Num. Conocidos: Gerente o director de gran empresa" (70)
+elsoc_long_2016_2022.2$n_ceo <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_01,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_ceo)
+table(elsoc_long_2016_2022.2$n_ceo,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_06) #"Num. Conocidos: Abogado/a" (85)
+elsoc_long_2016_2022.2$n_lawyer <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_06,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_lawyer)
+table(elsoc_long_2016_2022.2$n_lawyer,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_13) #"Num. Conocidos: Profesor/a de universidad" (77)
+elsoc_long_2016_2022.2$n_univprof <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_13,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_univprof)
+table(elsoc_long_2016_2022.2$n_univprof,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_12)#"Num. Conocidos: Contador/a" (60)
+elsoc_long_2016_2022.2$n_account <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_12,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_account)
+table(elsoc_long_2016_2022.2$n_account,elsoc_long_2016_2022.2$ola)
+
+
+# Middle status occupations-----------------------------------------------------
+sjmisc::frq(elsoc_long_2016_2022.2$r01_03) #"Num. Conocidos: Secretario/a" (53)
+elsoc_long_2016_2022.2$n_secret <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_03,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_secret)
+table(elsoc_long_2016_2022.2$n_secret,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_05) #"Num. Conocidos: Vendedor de tienda o almacen" (43)
+elsoc_long_2016_2022.2$n_shopassi <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_05,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_shopassi)
+table(elsoc_long_2016_2022.2$n_shopassi,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_09) #"Num. Conocidos: Parvularia" (43)
+elsoc_long_2016_2022.2$n_kinder <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_09,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_kinder)
+table(elsoc_long_2016_2022.2$n_kinder,elsoc_long_2016_2022.2$ola)
+
+# Lower status occupations-----------------------------------------------------
+sjmisc::frq(elsoc_long_2016_2022.2$r01_11) #"Num. Conocidos: Camarero o mozo" (34)
+elsoc_long_2016_2022.2$n_waiter <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_11,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_waiter)
+table(elsoc_long_2016_2022.2$n_waiter,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_04)#"Num. Conocidos: Mecanico de autos" (34)
+elsoc_long_2016_2022.2$n_carmech <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_04,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_carmech)
+table(elsoc_long_2016_2022.2$n_carmech,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_10) #"Num. Conocidos: Chofer de taxi o colectivo" (30)
+elsoc_long_2016_2022.2$n_taxi <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_10,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_taxi)
+table(elsoc_long_2016_2022.2$n_taxi,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_02) #"Num. Conocidos: Vendedor ambulante" (29)
+elsoc_long_2016_2022.2$n_stvend <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_02,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_stvend)
+table(elsoc_long_2016_2022.2$n_stvend,elsoc_long_2016_2022.2$ola)
+
+sjmisc::frq(elsoc_long_2016_2022.2$r01_07) #"Num. Conocidos: Aseador/a de oficina" (17)
+elsoc_long_2016_2022.2$n_cleaner <- as.numeric(car::recode(elsoc_long_2016_2022.2$r01_07,"1=0;2=1;3=3;4=6;5=9;6=13;7=17"))
+sjmisc::frq(elsoc_long_2016_2022.2$n_cleaner)
+
+table(elsoc_long_2016_2022.2$n_cleaner,elsoc_long_2016_2022.2$ola)
+
+elsoc_long_2016_2022.2 %>% 
+  select(starts_with("n_")) %>% 
+  names()
+
+
+# total number of contacts
+n_ocupnames<- c("n_doctor","n_ceo","n_lawyer","n_univprof","n_account","n_secret","n_shopassi","n_kinder","n_waiter","n_carmech","n_taxi","n_stvend","n_cleaner")
+elsoc_long_2016_2022.2$n_total <- rowSums(x = select(elsoc_long_2016_2022.2,n_ocupnames),na.rm = F)
+summary(elsoc_long_2016_2022.2$n_total)
+sjlabelled::set_label(elsoc_long_2016_2022.2$n_total) <- 'Total number of contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$n_total,type = 'density')
+elsoc_long_2016_2022.2 %>%  select(starts_with("n_")) %>% skimr::skim()
+# elsoc_long_2016_2022.2 %>%  select(starts_with("n_")) %>% View
+# List of variables to divide
+variables <- elsoc_long_2016_2022.2 %>% 
+  select(starts_with("n_")) %>% 
+  names()
+
+# Divide each variable by the divisor and create new variables
+for (i in variables) {
+  z <- paste0("pct_",i)
+  z <- gsub("n_", "", z)
+  elsoc_long_2016_2022.2[[z]] <- as.numeric(elsoc_long_2016_2022.2[[i]]/elsoc_long_2016_2022.2$n_total)
+}
+
+# assing labels
+professions <- c("Medical doctor", "Manager of a large firm", "Lawyer",
+                "University Professor", "Accountant", "Secretary", "Shop assistant",
+                "Preschool teacher", "Waiter", "Car mechanic", "Taxi driver",
+                "Street vendor", "Office cleaner")
+labels <- paste0("Percentage of contacts: ",professions)
+
+vars_tolabel <- names(select(elsoc_long_2016_2022.2 ,starts_with("pct_"),-pct_total,-"pct_visitas_entr"))
+elsoc_long_2016_2022.2[,c(vars_tolabel)] <- set_label(x = elsoc_long_2016_2022.2[,c(vars_tolabel)],label = labels)
+# elsoc[,c(vars_tolabel)] %>% View
+```
+
+```{r social-capital}
+# Social capital measures
+isei_ocupnames<- names(select(elsoc_long_2016_2022.2,starts_with("isei_")))
+n_ocupnames <- names(select(elsoc_long_2016_2022.2,starts_with("n_"),-n_total,-"n_visitas_entr"))
+
+# number of high status contacts
+elsoc_long_2016_2022.2$num_high <-
+  rowSums(x = select(elsoc_long_2016_2022.2,c("n_doctor","n_ceo","n_lawyer", "n_univprof","n_account")),na.rm = T)
+
+elsoc_long_2016_2022.2$n_high <- 
+  rowSums(x = select(elsoc_long_2016_2022.2,c("know_doctor","know_ceo","know_lawyer", "know_univprof","know_account")),na.rm = T)
+sjlabelled::set_label(elsoc_long_2016_2022.2$n_high) <- 'Number of high status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$n_high,type = 'density')
+
+# percentage of high status contacts
+# elsoc_long_2016_2022.2$pct_high <- (elsoc_long_2016_2022.2$n_high/elsoc_long_2016_2022.2$n_total)*100
+elsoc_long_2016_2022.2$pct_high <- (elsoc_long_2016_2022.2$n_high/elsoc_long_2016_2022.2$know_total)*100
+elsoc_long_2016_2022.2$porc_high <- (elsoc_long_2016_2022.2$num_high/elsoc_long_2016_2022.2$n_total)*100
+sjlabelled::set_label(elsoc_long_2016_2022.2$pct_high ) <- 'Percentage of high status contacts'
+sjlabelled::set_label(elsoc_long_2016_2022.2$porc_high) <- 'Percentage of high status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$pct_high,type = 'density')
+
+# number of middle status contacts
+elsoc_long_2016_2022.2$num_middle <-
+  rowSums(x = select(elsoc_long_2016_2022.2,c("n_secret","n_shopassi","n_kinder")),na.rm = T)
+elsoc_long_2016_2022.2$n_middle <-
+  rowSums(x = select(elsoc_long_2016_2022.2,c("know_secret","know_shopassi","know_kinder")),na.rm = T)
+sjlabelled::set_label(elsoc_long_2016_2022.2$n_middle) <- 'Number of middle status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$n_middle,type = 'density')
+
+# percentage of middle status contacts
+elsoc_long_2016_2022.2$pct_middle <- (elsoc_long_2016_2022.2$n_middle/elsoc_long_2016_2022.2$know_total)*100
+elsoc_long_2016_2022.2$porc_middle <- (elsoc_long_2016_2022.2$num_middle/elsoc_long_2016_2022.2$n_total)*100
+sjlabelled::set_label(elsoc_long_2016_2022.2$porc_middle) <- 'Percentage of middle status contacts'
+sjlabelled::set_label(elsoc_long_2016_2022.2$pct_middle) <- 'Percentage of middle status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$pct_middle,type = 'density')
+
+# number of low status contacts
+elsoc_long_2016_2022.2$num_low <-
+  rowSums(x = select(elsoc_long_2016_2022.2,c("n_waiter","n_carmech","n_taxi","n_stvend","n_cleaner")),na.rm = T)
+elsoc_long_2016_2022.2$n_low <- 
+  rowSums(x = select(elsoc_long_2016_2022.2,c("know_waiter","know_carmech","know_taxi","know_stvend","know_cleaner")),na.rm = T)
+sjlabelled::set_label(elsoc_long_2016_2022.2$n_low) <- 'Number of low status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$n_low,type = 'density')
+sjPlot::plot_frq(elsoc_long_2016_2022.2$num_low,type = 'density')
+
+# percentage of low status contacts
+elsoc_long_2016_2022.2$porc_low <- (elsoc_long_2016_2022.2$num_low/elsoc_long_2016_2022.2$n_total)*100
+sjlabelled::set_label(elsoc_long_2016_2022.2$porc_low) <- 'Percentage of low status contacts'
+
+elsoc_long_2016_2022.2$pct_low <- (elsoc_long_2016_2022.2$n_low/elsoc_long_2016_2022.2$know_total)*100
+sjlabelled::set_label(elsoc_long_2016_2022.2$pct_low) <- 'Percentage of low status contacts'
+sjPlot::plot_frq(elsoc_long_2016_2022.2$pct_low,type = 'density')
+sjPlot::plot_frq(elsoc_long_2016_2022.2$porc_low,type = 'density')
+
+# Average ISEI 
+elsoc_long_2016_2022.2$isei_avg <- rowMeans(x = select(elsoc_long_2016_2022.2,isei_ocupnames),na.rm = T)
+sjlabelled::set_label(elsoc_long_2016_2022.2$isei_avg) <- 'Average contact prestige'
+skimr::skim(elsoc_long_2016_2022.2$isei_avg)
+sjPlot::plot_frq(elsoc_long_2016_2022.2$isei_avg,type = 'density')
+
+# Total ISEI 
+elsoc_long_2016_2022.2$isei_tot <- rowSums(x = select(elsoc_long_2016_2022.2,isei_ocupnames),na.rm = T)
+sjlabelled::set_label(elsoc_long_2016_2022.2$isei_tot) <- 'Total contact prestige'
+sjmisc::frq(elsoc_long_2016_2022.2$isei_avg)
+sjPlot::plot_frq(elsoc_long_2016_2022.2$isei_avg,type = 'density')
+
+# skimr::skim(elsoc_long_2016_2022.2$isei_tot/elsoc_long_2016_2022.2$n_total)
+# skimr::skim(elsoc_long_2016_2022.2$isei_tot/elsoc_long_2016_2022.2$know_total)
+# skimr::skim(elsoc_long_2016_2022.2$isei_avg)
+
+
+# max ISEI 
+elsoc_long_2016_2022.2 <- elsoc_long_2016_2022.2 %>% 
+mutate(isei_max = do.call(pmax, c(select(., isei_ocupnames), na.rm = TRUE)))
+sjlabelled::set_label(elsoc_long_2016_2022.2$isei_max) <- 'Maximum contact prestige'
+sjmisc::frq(elsoc_long_2016_2022.2$isei_max)
+sjPlot::plot_frq(elsoc_long_2016_2022.2$isei_max)
+
+# min ISEI
+elsoc_long_2016_2022.2 <- elsoc_long_2016_2022.2 %>% 
+mutate(isei_min = do.call(pmin, c(select(., isei_ocupnames), na.rm = TRUE)))
+sjlabelled::set_label(elsoc_long_2016_2022.2$isei_min) <- 'Minimum contact prestige'
+sjmisc::frq(elsoc_long_2016_2022.2$isei_min)
+sjPlot::plot_frq(elsoc_long_2016_2022.2$isei_min)
+
+# range ISEI
+table(elsoc_long_2016_2022.2$know_total>=2)
+elsoc_long_2016_2022.2$isei_range <- ifelse(elsoc_long_2016_2022.2$know_total>=2,(elsoc_long_2016_2022.2$isei_max - elsoc_long_2016_2022.2$isei_min),no = NA)
+
+sjlabelled::set_label(elsoc_long_2016_2022.2$isei_range) <- 'Range contact prestige'
+sjmisc::frq(elsoc_long_2016_2022.2$isei_range)
+# sjPlot::plot_frq(elsoc_long_2016_2022.2$isei_range)
+elsoc_long_2016_2022.2 %>% select(starts_with("isei_")) %>% View
+
+# ggpairs(elsoc_long_2016_2022.2[,c("isei_avg","isei_max","isei_range",
+#                  "n_total","n_high","n_middle","n_low",
+#                  "pct_high","pct_middle","pct_low")], 
+#         title="Social capital measures") 
+```
+
+
+```{r}
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(isei_avg=mean(isei_avg,na.rm = T),
+         field="Network average ISEI"),
+) %>% na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = isei_avg, group=field, color=field,label=round(isei_avg,2))) +
+  geom_point()+
+  geom_line() +
+  geom_label()+
+  scale_y_continuous(limits = c(16,88)) +
+  scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network average ISEI by year",x="Year",y=NULL)
+
+elsoc_long_2016_2022.2 %>% 
+  ggplot(aes(x=factor(ola),y = isei_avg)) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0,100)) +
+  scale_x_discrete(labels=c("2016","2017","2018","2019","2021","2022")) +
+  labs(title = "Network average ISEI by year",x="Year",y=NULL)
+
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(n_total=mean(n_total,na.rm = T),
+         field="Total number of contacts") %>%
+  filter(n_total>0) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = n_total, group=field,label=round(n_total,2))) +
+  geom_point()+
+  geom_line() +
+  geom_label()+
+  scale_y_continuous(limits = c(0,221)) +
+  scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network total contacts by year",x="Year",y=NULL)
+
+elsoc_long_2016_2022.2 %>% 
+  ggplot(aes(x=factor(ola),y = n_total)) +
+  geom_boxplot() +
+  # scale_y_continuous(limits = c(0,100)) +
+  scale_x_discrete(labels=c("2016","2017","2018","2019","2021","2022")) +
+  labs(title = "Network total contacts by year",x="Year",y=NULL)
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(isei_range=mean(isei_range,na.rm = T),field="Network ISEI range") %>% 
+    na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = isei_range, group=field, color=field)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(0,72)) +
+  scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network ISEI range by year",x="Year",y=NULL)
+
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(perc=mean(porc_high,na.rm = T),Status="high-status"),
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(perc=mean(porc_middle,na.rm = T),Status="middle-status"),
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(perc=mean(porc_low,na.rm = T),Status="low-status")
+) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = perc, group=Status, color=Status)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(10,90),n.breaks = 20) +
+  scale_x_discrete(labels=c("2016","2018","2021")) +
+  labs(title = "Network percentage of high, middle and low occupations by year",x="Year",y=NULL) +
+  theme()
+```
+
+
+```{r}
+elsoc_long_2016_2022.2 %>% 
+  select(isei_avg,porc_low,porc_middle,porc_high,just_educ,just_salud,just_pension) %>% 
+  sjPlot::tab_corr(triangle = "lower",wrap.labels =25,
+                   var.labels = c("ISEI network","Low-status ties %"," Middle-status ties %"," High-status ties % ","Education","Health","Pensions"),digits = 2)
+
+
+
+elsoc_long_2016_2022.2 %>%
+  filter(ola %in% c(5)) %>%
+  select(isei_avg,porc_low,porc_middle,porc_high,
+         percgerlog,percobrlog,
+         justger,justobr,
+         percgaplog,
+         justgaplog) %>% 
+  sjPlot::tab_corr(triangle = "lower")
+
+
+models1 <- 
+list(lme4::lmer(just_pension~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(just_pension~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(just_pension~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(just_pension~isei_avg + ola + educyear +(1|idencuesta),data = elsoc_long_2016_2022.2)
+     )
+screenreg(models1)
+
+models1 <- 
+list(lme4::lmer(justgaplog~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(justgaplog~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(justgaplog~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(justgaplog~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(justgaplog~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(justgaplog~ isei_avg + ola + educyear + quintil1 +  n_total + percgaplog +(1 + isei_avg|idencuesta),data = elsoc_long_2016_2022.2)
+     )
+
+texreg::screenreg(models1)
+
+elsoc_long_2016_2022.2 %>% 
+  filter(ola==1) %>% 
+  select(starts_with("prosocial")) %>% 
+  sjPlot::tab_corr(triangle = "lower",wrap.labels =25)
+
+
+models1 <- 
+list(lme4::lmer(prosocial5~porc_low +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(prosocial5~ porc_middle + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(prosocial5~porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(prosocial5~porc_low + porc_middle +porc_high +(1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(prosocial5~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = elsoc_long_2016_2022.2),
+     lme4::lmer(prosocial5~isei_avg + ola + educyear +(1|idencuesta),data = elsoc_long_2016_2022.2)
+     )
+screenreg(models1)
+```
+
+
+```{r}
 # Socioeconomic_________________________________________________________________
 
 # Education_______________________________________
@@ -500,6 +1114,11 @@ sjPlot::view_df(df_study1_long_t6,
         show.na = T,
         file = here::here("output/df_study1_long_t6.html"))
 ```
+```
+
+
+```{r}
+
 
 ## Contextual data
 

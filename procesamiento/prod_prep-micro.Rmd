@@ -30,7 +30,7 @@ options(scipen=9999) # desactivar notacion cientifica
 ```{r}
 remove(list = ls()) # clean workspace
 if (!require("pacman")) install.packages("pacman") # install pacman
-pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2)# load libraries
+pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2,DIGCLASS)# load libraries
 load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
 
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-999] <- NA
@@ -49,14 +49,32 @@ elsoc_long_2016_2022.2 %>%
          gensocialtrust=c02,
          genaltruism=c03,
          genjust=c04,
-         prosocial1=c07_01,
-         prosocial2=c07_02,
-         prosocial3=c07_03,
-         prosocial4=c07_04,
-         prosocial5=c07_05,
-         prosocial6=c07_06,
-         prosocial7=c07_07,
-         prosocial8=c07_08,
+         ps_veci=c07_01,
+         ps_comu=c07_02,
+         ps_amig=c07_03,
+         ps_volu=c07_04,
+         ps_dona=c07_05,
+         ps_mone=c07_06,
+         ps_conv=c07_07,
+         ps_job=c07_08,
+         mem_jjvv=c12_01,
+         mem_reli = c12_02,
+         mem_poli = c12_03,
+         mem_unio = c12_04,
+         mem_grem = c12_05,
+         mem_char = c12_06,
+         mem_spor = c12_07,
+         mem_stud = c12_08,
+         mem_othe = c12_09,
+         mem_othet = c12_09_otro,
+         isco08=ciuo08_m22,
+         isco88=ciuo88_m22,
+         emprel=m26,
+         nsup=m25,
+         isco08res=ciuo08_m03,
+         isco88res=ciuo88_m03,
+         emprelres=m07,
+         nsupres=m06,
          sexo=m0_sexo) %>% 
   sjlabelled::drop_labels(., drop.na = FALSE)
   
@@ -83,6 +101,85 @@ sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
                                   "Agree", "Strongly agree"))
 }
 
+# elsoc_long_2016_2022.2$isco08 = as.numeric(isco88_to_isco08(elsoc_long_2016_2022.2$isco88))
+elsoc_long_2016_2022.2 <- 
+elsoc_long_2016_2022.2 %>%
+  mutate(
+    is_supervisor = ifelse(nsup == 0, 0, 1),
+    self_employed = case_when(
+      emprel %in% c(1, 2) ~ 0,
+      emprel %in% c(4, 5) ~ 1,
+      TRUE ~ NA
+    ),
+    n_employees = ifelse(is_supervisor == 0, 0, nsup)
+  ) 
+
+
+elsoc_long_2016_2022.2$isco88_2 = as.numeric(isco08_to_isco88(elsoc_long_2016_2022.2$isco08))
+summary(elsoc_long_2016_2022.2$isco88_2)
+summary(elsoc_long_2016_2022.2$isco88)
+
+elsoc_long_2016_2022.2$isco88_3<- ifelse(is.na(elsoc_long_2016_2022.2$isco88_2),yes = elsoc_long_2016_2022.2$isco88,elsoc_long_2016_2022.2$isco88_2)
+summary(elsoc_long_2016_2022.2$isco88_3)
+
+# elsoc_long_2016_2022.2 %>% select(idencuesta,ola,isco88res,isco08res,isco88_2,isco88_3,is_supervisor_r,self_employed_r,n_employees_r) %>% arrange(idencuesta) %>% View()
+
+elsoc_long_2016_2022.2 <-
+  elsoc_long_2016_2022.2 %>% mutate(
+    isco88,
+    egp11_label = isco88_to_egp(isco88_3, self_employed, n_employees,label = T,to_factor = T),
+    egp11 = isco88_to_egp(isco88_3, self_employed, n_employees,to_factor = T)
+  )
+
+frq(elsoc_long_2016_2022.2$egp11_label)
+frq(elsoc_long_2016_2022.2$egp11)
+
+
+# Respondent Social Class-------------------------------------------------------.
+elsoc_long_2016_2022.2$isco88res_2 = as.numeric(isco08_to_isco88(elsoc_long_2016_2022.2$isco08res))
+summary(elsoc_long_2016_2022.2$isco88res_2)
+summary(elsoc_long_2016_2022.2$isco88res)
+
+elsoc_long_2016_2022.2$isco88res_3<- ifelse(is.na(elsoc_long_2016_2022.2$isco88res_2),yes = elsoc_long_2016_2022.2$isco88res,elsoc_long_2016_2022.2$isco88res_2)
+summary(elsoc_long_2016_2022.2$isco88res_3)
+# elsoc_long_2016_2022.2 %>% select(idencuesta,ola,isco88res,isco08res,isco88res_2,is_supervisor_r,self_employed_r,n_employees_r) %>% arrange(idencuesta) %>% View()
+
+elsoc_long_2016_2022.2 <- 
+elsoc_long_2016_2022.2 %>%
+  mutate(
+    is_supervisor_r = ifelse(nsupres == 0, 0, 1),
+    self_employed_r = case_when(
+      emprelres %in% c(1, 2) ~ 0,
+      emprelres %in% c(4, 5) ~ 1,
+      TRUE ~ NA
+    ),
+    n_employees_r = ifelse(is_supervisor_r == 0, 0, nsupres)
+  ) 
+
+# elsoc_long_2016_2022.2 %>% select(idencuesta,ola,isco88res,is_supervisor_r,self_employed_r,n_employees_r) %>% arrange(idencuesta)
+
+
+elsoc_long_2016_2022.2 <-
+  elsoc_long_2016_2022.2 %>% mutate(
+    isco88,
+    egp11_r_label = isco88_to_egp(x = isco88res_3, self_employed = self_employed_r,n_employees= n_employees_r,label = T),
+  )
+
+frq(elsoc_long_2016_2022.2$egp11_r_label)
+frq(elsoc_long_2016_2022.2$egp6)
+
+# elsoc_long_2016_2022.2 %>% select(idencuesta,ola,isco88res,isco08res,isco88res_2,isco88res_3,is_supervisor_r,self_employed_r,n_employees_r,egp11_r,egp7_r,egp5_r,egp3_r) %>% arrange(idencuesta) %>% View()
+
+elsoc_long_2016_2022.2$mem_jjvv <-to_factor(elsoc_long_2016_2022.2$mem_jjvv)
+elsoc_long_2016_2022.2$mem_reli <-to_factor(elsoc_long_2016_2022.2$mem_reli)
+elsoc_long_2016_2022.2$mem_poli <-to_factor(elsoc_long_2016_2022.2$mem_poli)
+elsoc_long_2016_2022.2$mem_unio <-to_factor(elsoc_long_2016_2022.2$mem_unio)
+elsoc_long_2016_2022.2$mem_grem <-to_factor(elsoc_long_2016_2022.2$mem_grem)
+elsoc_long_2016_2022.2$mem_char <-to_factor(elsoc_long_2016_2022.2$mem_char)
+elsoc_long_2016_2022.2$mem_spor <-to_factor(elsoc_long_2016_2022.2$mem_spor)
+elsoc_long_2016_2022.2$mem_stud <-to_factor(elsoc_long_2016_2022.2$mem_stud)
+elsoc_long_2016_2022.2$mem_othe <-to_factor(elsoc_long_2016_2022.2$mem_othe)
+
 
 elsoc_long_2016_2022.2$percger <-  elsoc_long_2016_2022.2$d03_01+1
 elsoc_long_2016_2022.2$percger <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$percger, label = "Perceived Salary: Manager")
@@ -99,9 +196,6 @@ elsoc_long_2016_2022.2$justgerlog <- log(elsoc_long_2016_2022.2$justger)
 elsoc_long_2016_2022.2$justgerlog <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgerlog, label = "Just Salary: Manager (log)")
 elsoc_long_2016_2022.2$justgerptile <- ntile(elsoc_long_2016_2022.2$justger,100)
 elsoc_long_2016_2022.2$justgerptile <-sjlabelled::set_label(x = elsoc_long_2016_2022.2$justgerptile, label = "Just Salary: Manager (ptiles)")
-
-
-elsoc_long_2016_2022.2 %>% select(justgerlog,justgerptile,justger) %>% sjPlot::tab_corr(triangle = "lower")
 
 
 elsoc_long_2016_2022.2$percobr <-  elsoc_long_2016_2022.2$d03_02+1
@@ -135,68 +229,46 @@ elsoc_long_2016_2022.2$justgaplog <-  sjlabelled::set_label(x = log(elsoc_long_2
 elsoc_long_2016_2022.2$justgapptile <-  sjlabelled::set_label(x = ntile(elsoc_long_2016_2022.2$justgap,100), label = "Just Salary Gap (ptiles)")
 elsoc_long_2016_2022.2 %>% select(justgap,justgaplog,justgapptile) %>% sjPlot::tab_corr(triangle = "lower")
 
-elsoc_long_2016_2022.2$prosocial1 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial1, 
+elsoc_long_2016_2022.2$ps_veci <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_veci, 
                       label = "I visited a neighbor's house")
 
-elsoc_long_2016_2022.2$prosocial2 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial2, 
+elsoc_long_2016_2022.2$ps_comu <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_comu, 
                       label = "Attended a meeting on topics of public/community interest")
 
-elsoc_long_2016_2022.2$prosocial3 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial3, 
+
+elsoc_long_2016_2022.2$ps_amig <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_amig, 
                       label = "Friends have visisted their home")
 
-elsoc_long_2016_2022.2$prosocial4 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial4, 
+elsoc_long_2016_2022.2$ps_volu <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_volu, 
                       label = "Have done volunteer work")
 
-elsoc_long_2016_2022.2$prosocial5 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial5, 
+elsoc_long_2016_2022.2$ps_dona <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_dona, 
                       label = "Has donated money to charity")
 
-elsoc_long_2016_2022.2$prosocial6 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial6, 
+elsoc_long_2016_2022.2$ps_mone <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_mone, 
                       label = "Has lent $10,000 or more")
 
 
-elsoc_long_2016_2022.2$prosocial7 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial7, 
+elsoc_long_2016_2022.2$ps_conv <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_conv, 
                       label = "Talked to a person in trouble or depressed")
 
-elsoc_long_2016_2022.2$prosocial8 <- 
-sjlabelled::set_label(x = elsoc_long_2016_2022.2$prosocial8, 
+elsoc_long_2016_2022.2$ps_job <- 
+sjlabelled::set_label(x = elsoc_long_2016_2022.2$ps_job, 
                       label = "Helped someone get a job")
 
 
-for (i in c("prosocial1","prosocial2","prosocial3","prosocial4","prosocial5",
-            "prosocial6","prosocial7","prosocial8")) {
+for (i in c("ps_veci","ps_comu","ps_amig","ps_volu","ps_dona","ps_mone","ps_conv","ps_job")) {
 elsoc_long_2016_2022.2[[i]] <-
 sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
                        labels = c("Never did it","Did it once or twice","Did it more than twice"))
 }
-
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  sjmisc::frq(prosocial1) %>% 
-  as.data.frame() %>% 
-  select(variable, group, label,raw.prc) %>% 
-  na.omit() %>% 
-  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
-  geom_bar(position="stack", stat="identity") +
-  geom_text(size = 4, position = position_stack(vjust = 0.5))
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  sjmisc::frq(prosocial2) %>% 
-  as.data.frame() %>% 
-  select(variable, group, label,raw.prc) %>% 
-  na.omit() %>% 
-  ggplot(aes(fill=label, x=group, y=raw.prc, label = raw.prc)) +
-  geom_bar(position="stack", stat="identity") +
-  geom_text(size = 4, position = position_stack(vjust = 0.5))
-
 
 elsoc_long_2016_2022.2 %>%
   group_by(ola) %>% 
@@ -635,7 +707,7 @@ elsoc_long_2016_2022.2 %>% select(starts_with("isei_")) %>% View
 #         title="Social capital measures") 
 ```
 
-```{r}
+```{r heterogeneity}
 ## Heterogeneidad de la RED ------------------------------------------------
 ##Ocupaciones
 # calculate the proportion for each occupation and then apply a cuadratic term
@@ -664,14 +736,11 @@ sjlabelled::set_label(elsoc_long_2016_2022.2$diversity) <- "Network diversity (D
 elsoc_long_2016_2022.2$homogeneity=rowSums(elsoc_long_2016_2022.2[,prop_ocup])
 sjlabelled::set_label(elsoc_long_2016_2022.2$homogeneity) <- "Network Homogeneity (D-Simpson)"
 
-
 elsoc_long_2016_2022.2$prop_upper<-((elsoc_long_2016_2022.2$n_high/elsoc_long_2016_2022.2$n_total))^2
 elsoc_long_2016_2022.2$prop_interm<-((elsoc_long_2016_2022.2$n_middle/elsoc_long_2016_2022.2$n_total))^2
 elsoc_long_2016_2022.2$prop_working<-((elsoc_long_2016_2022.2$n_low/elsoc_long_2016_2022.2$n_total))^2
 
 elsoc_long_2016_2022.2$diversityclass=1-rowSums(elsoc_long_2016_2022.2[,c("prop_upper","prop_interm","prop_working")])
-
-
 ```
 
 
@@ -719,6 +788,8 @@ elsoc_long_2016_2022.2 %>%
   # scale_y_continuous(limits = c(0,100)) +
   scale_x_discrete(labels=c("2016","2017","2018","2019","2021","2022")) +
   labs(title = "Network total contacts by year",x="Year",y=NULL)
+
+
 elsoc_long_2016_2022.2 %>%
   group_by(ola) %>% 
   summarise(isei_range=mean(isei_range,na.rm = T),field="Network ISEI range") %>% 
@@ -730,16 +801,53 @@ elsoc_long_2016_2022.2 %>%
   scale_x_discrete(labels=c("2016","2017","2021")) +
   labs(title = "Network ISEI range by year",x="Year",y=NULL)
 
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(diversity=mean(diversity,na.rm = T),field="Network ISEI range") %>% 
+    na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = diversity, group=field, color=field)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(0,1)) +
+  scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network diversity (occupations) by year",x="Year",y=NULL)
+
+
+elsoc_long_2016_2022.2 %>%
+  group_by(ola) %>% 
+  summarise(diversityclass=mean(diversityclass,na.rm = T),field="Network diversity") %>% 
+    na.omit() %>% 
+  ggplot(aes(x=factor(ola),y = diversityclass, group=field, color=field)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(0,1)) +
+  scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network diversity (status groups) by year",x="Year",y=NULL)
+
+
+
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%
+  group_by(egp5_r) %>% 
+  summarise(diversityclass=mean(diversityclass,na.rm = T),field="Network diversity") %>% 
+    na.omit() %>% 
+  ggplot(aes(x=factor(egp5_r),y = diversityclass, group=field, color=field)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(0.5,1)) +
+  # scale_x_discrete(labels=c("2016","2017","2021")) +
+  labs(title = "Network diversity (status groups) by Class (Wave 1)",x="Year",y=NULL)
+
 bind_rows(
 elsoc_long_2016_2022.2 %>%
   group_by(ola) %>% 
-  summarise(perc=mean(porc_high,na.rm = T),Status="high-status"),
+  summarise(perc=mean(porc_high,na.rm = T),Status="1. high-status"),
 elsoc_long_2016_2022.2 %>%
   group_by(ola) %>% 
-  summarise(perc=mean(porc_middle,na.rm = T),Status="middle-status"),
+  summarise(perc=mean(porc_middle,na.rm = T),Status="2. middle-status"),
 elsoc_long_2016_2022.2 %>%
   group_by(ola) %>% 
-  summarise(perc=mean(porc_low,na.rm = T),Status="low-status")
+  summarise(perc=mean(porc_low,na.rm = T),Status="3. low-status")
 ) %>% 
   na.omit() %>% 
   ggplot(aes(x=factor(ola),y = perc, group=Status, color=Status)) +
@@ -750,7 +858,28 @@ elsoc_long_2016_2022.2 %>%
   labs(title = "Network percentage of high, middle and low occupations by year",x="Year",y=NULL) +
   theme()
 
-
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>% 
+  group_by(egp7_r) %>% 
+  summarise(perc=mean(porc_high,na.rm = T),Status="1. high-status"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(egp7_r) %>% 
+  summarise(perc=mean(porc_middle,na.rm = T),Status="2. middle-status"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(egp7_r) %>% 
+  summarise(perc=mean(porc_low,na.rm = T),Status="3. low-status")
+) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(egp7_r),y = perc, group=Status, color=Status)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(10,90),n.breaks = 20) +
+  # scale_x_discrete(labels=c("2016","2018","2021")) +
+  labs(title = "Network percentage of high, middle and low occupations by Class (Wave 1)",x="Class",y=NULL) +
+  theme()
 ```
 
 

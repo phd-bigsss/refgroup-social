@@ -78,6 +78,10 @@ elsoc_long_2016_2022.2 %>%
          sexo=m0_sexo) %>% 
   sjlabelled::drop_labels(., drop.na = FALSE)
   
+
+```
+
+```{r just-dist}
 sjmisc::frq(elsoc_long_2016_2022.2$just_educ)
 elsoc_long_2016_2022.2$just_educ <- 
 sjlabelled::set_label(x = elsoc_long_2016_2022.2$just_educ, 
@@ -100,7 +104,9 @@ sjlabelled::set_labels(x = elsoc_long_2016_2022.2[[i]],
                                   "Neither disagree nor agree",
                                   "Agree", "Strongly agree"))
 }
+```
 
+```{r social-class}
 # elsoc_long_2016_2022.2$isco08 = as.numeric(isco88_to_isco08(elsoc_long_2016_2022.2$isco88))
 elsoc_long_2016_2022.2 <- 
 elsoc_long_2016_2022.2 %>%
@@ -162,12 +168,27 @@ elsoc_long_2016_2022.2 %>%
 elsoc_long_2016_2022.2 <-
   elsoc_long_2016_2022.2 %>% mutate(
     isco88,
-    egp11_r_label = isco88_to_egp(x = isco88res_3, self_employed = self_employed_r,n_employees= n_employees_r,label = T),
+    egp11_r_label = isco88_to_egp(x = isco88res_3, self_employed = self_employed_r,n_employees= n_employees_r,label = T,to_factor = T),
   )
 
-frq(elsoc_long_2016_2022.2$egp11_r_label)
-frq(elsoc_long_2016_2022.2$egp6)
+levels(elsoc_long_2016_2022.2$egp11_r_label) <- stringi::stri_replace_all(str = levels(elsoc_long_2016_2022.2$egp11_r_label),replacement = "",regex = "'")
 
+levels(elsoc_long_2016_2022.2$egp11_r_label) <- stringi::stri_replace_all(str = levels(elsoc_long_2016_2022.2$egp11_r_label),replacement = "",regex = ":")
+frq(elsoc_long_2016_2022.2$egp11_r_label)
+
+elsoc_long_2016_2022.2$egp8_r_label <- car::recode(var = elsoc_long_2016_2022.2$egp11_r_label,
+                                                   recodes = "c('IVa Self-employed with employees','IVb Self-employed with no employees','IVc Self-employed Farmer') = 'IV Self-employed';
+                                                   c('VIIa Unskilled Worker','VIIb Farm Labor') = 'VII Unskilled Workers'")
+
+elsoc_long_2016_2022.2$egp8_r_label_na <- elsoc_long_2016_2022.2$egp8_r_label
+egp8lab <- levels(elsoc_long_2016_2022.2$egp8_r_label_na)
+elsoc_long_2016_2022.2$egp8_r_label_na <- ifelse(elsoc_long_2016_2022.2$m02 %in% c(4,5,6,7,8,9),yes = 9,no= elsoc_long_2016_2022.2$egp8_r_label_na)
+elsoc_long_2016_2022.2$egp8_r_label_na <- factor(elsoc_long_2016_2022.2$egp8_r_label_na,labels = c(egp8lab,"Never worked and long-term unemployed"))
+frq(elsoc_long_2016_2022.2$egp8_r_label_na)
+```
+
+
+```{r}
 # elsoc_long_2016_2022.2 %>% select(idencuesta,ola,isco88res,isco08res,isco88res_2,isco88res_3,is_supervisor_r,self_employed_r,n_employees_r,egp11_r,egp7_r,egp5_r,egp3_r) %>% arrange(idencuesta) %>% View()
 
 elsoc_long_2016_2022.2$mem_jjvv <-to_factor(elsoc_long_2016_2022.2$mem_jjvv)
@@ -828,10 +849,10 @@ elsoc_long_2016_2022.2 %>%
 
 elsoc_long_2016_2022.2 %>%
   filter(ola==1) %>%
-  group_by(egp5_r) %>% 
+  group_by(egp8_r_label) %>% 
   summarise(diversityclass=mean(diversityclass,na.rm = T),field="Network diversity") %>% 
     na.omit() %>% 
-  ggplot(aes(x=factor(egp5_r),y = diversityclass, group=field, color=field)) +
+  ggplot(aes(x=factor(egp8_r_label),y = diversityclass, group=field, color=field)) +
   geom_point()+
   geom_line() +
   scale_y_continuous(limits = c(0.5,1)) +
@@ -861,25 +882,26 @@ elsoc_long_2016_2022.2 %>%
 bind_rows(
 elsoc_long_2016_2022.2 %>%
   filter(ola==1) %>% 
-  group_by(egp7_r) %>% 
+  group_by(egp8_r_label) %>% 
   summarise(perc=mean(porc_high,na.rm = T),Status="1. high-status"),
 elsoc_long_2016_2022.2 %>%
   filter(ola==1) %>%   
-  group_by(egp7_r) %>% 
+  group_by(egp8_r_label) %>% 
   summarise(perc=mean(porc_middle,na.rm = T),Status="2. middle-status"),
 elsoc_long_2016_2022.2 %>%
   filter(ola==1) %>%   
-  group_by(egp7_r) %>% 
+  group_by(egp8_r_label) %>% 
   summarise(perc=mean(porc_low,na.rm = T),Status="3. low-status")
 ) %>% 
   na.omit() %>% 
-  ggplot(aes(x=factor(egp7_r),y = perc, group=Status, color=Status)) +
+  ggplot(aes(x=factor(egp8_r_label),y = perc, group=Status, color=Status)) +
   geom_point()+
   geom_line() +
   scale_y_continuous(limits = c(10,90),n.breaks = 20) +
   # scale_x_discrete(labels=c("2016","2018","2021")) +
   labs(title = "Network percentage of high, middle and low occupations by Class (Wave 1)",x="Class",y=NULL) +
   theme()
+
 ```
 
 
@@ -1086,27 +1108,42 @@ elsoc_long_2016_2022.2 %>%
 
 dfreg <- 
 elsoc_long_2016_2022.2 %>%
-  filter(ola %in%c(1,3,5))
-  
+  filter(ola %in%c(1,3,5,6))
+
+dfreg <- 
+dfreg %>%
+  group_by(idencuesta) %>%
+  mutate(just_educ = if_else(ola == 5 & is.na(just_educ), last(just_educ[ola == 6]), just_educ),
+         just_salud = if_else(ola == 5 & is.na(just_salud), last(just_salud[ola == 6]), just_salud),
+         just_pension = if_else(ola == 5 & is.na(just_pension), last(just_pension[ola == 6]), just_pension)) %>%
+  ungroup()
+
+dfreg$market<- rowMeans(dfreg[,c("just_educ","just_salud","just_pension")],na.rm = T)
+dfreg$market <- ((dfreg$market-min(dfreg$market,na.rm = T))/(max(dfreg$market,na.rm = T)-min(dfreg$market,na.rm = T)))*100
+
+sjlabelled::set_label(dfreg$market) <- "Market-based distribution of social services (3 items)"
+
+
+dfreg$market2<- rowMeans(dfreg[,c("just_educ","just_salud")],na.rm = T)
+dfreg$market2 <- ((dfreg$market2-min(dfreg$market2,na.rm = T))/(max(dfreg$market2,na.rm = T)-min(dfreg$market2,na.rm = T)))*100
+
+sjlabelled::set_label(dfreg$market2) <- "Market-based distribution of social services (2 items)"
+
 dfreg <- 
 dfreg %>% select(idencuesta,ola,
-                 # just_educ,just_salud,just_pension,
-                 justgapptile,
-                 percgapptile,
-                 porc_high,porc_low,
-                 isei_avg,n_total,
-                 diversity,diversityclass,educyear,quintil1) %>% 
-  arrange(idencuesta)
+                 market,
+                 diversity,
+                 educyear,
+                 quintil1,
+                 egp8_r_label_na) %>% 
+  arrange(idencuesta) %>% 
+  filter(ola %in% c(1,3,5)) %>% na.omit()
 
-
-
-
-
-
+skimr::skim(dfreg)
 df_filter<- data.frame(frq(dfreg$idencuesta)) %>% select(idencuesta=val,frq)
 df_filter$keep <- df_filter$frq>=3
 table(df_filter$keep)
-# 
+#
 dfreg <-  dfreg %>% left_join(df_filter,by = "idencuesta")
 dfreg <-  dfreg %>%  filter(keep=="TRUE")
 table(dfreg$keep)
@@ -1116,75 +1153,177 @@ df_filter$keep <- df_filter$frq>=3
 table(df_filter$keep)
 dim(dfreg)
 
+#Filter 2
+df_filter2<- data.frame(frq(dfreg$idencuesta)) %>% select(idencuesta=val,frq)
+df_filter2$keep <- df_filter$frq>=3
+table(df_filter2$keep)
+
+dfreg$frq <- NULL
+dfreg$keep <- NULL
+dfreg <-  dfreg %>% left_join(df_filter2,by = "idencuesta")
+dfreg <-  dfreg %>%  filter(keep=="TRUE")
+table(dfreg$keep)
+
+
+library(estimatr);library(lme4)
 education <- 
 list(
-  # lme4::lmer(just_educ~porc_low +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_educ~ porc_middle + (1|idencuesta),data = dfreg),
-  # lme4::lmer(just_educ~porc_high +(1|idencuesta),data = dfreg),
-  lme4::lmer(just_educ~porc_low + porc_high +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_educ~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_educ~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_educ~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1+educyear|idencuesta),data = dfreg),
-  lme4::lmer(just_educ~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+  lmer(just_educ~porc_low + porc_high + (1|idencuesta),data = dfreg),
+  lmer(just_educ~isei_avg + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_educ~isei_avg + diversity + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_educ~isei_avg + diversityclass +  ola + educyear + quintil1+ (1|idencuesta),data = dfreg)
 )
 
-texreg::screenreg(education)
+texreg::screenreg(education, include.ci = FALSE)
 
 health <- 
 list(
-  # lme4::lmer(just_salud~porc_low +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_salud~ porc_middle + (1|idencuesta),data = dfreg),
-  # lme4::lmer(just_salud~porc_high +(1|idencuesta),data = dfreg),
-  lme4::lmer(just_salud~porc_low + porc_high +(1|idencuesta),data = dfreg),
-  lme4::lmer(just_salud~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_salud~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_salud~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-     lme4::lmer(just_salud~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
-)
+  lmer(just_salud~porc_low + porc_high+ (1|idencuesta),data = dfreg),
+  lmer(just_salud~isei_avg + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_salud~isei_avg + diversity + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_salud~isei_avg + diversityclass +  ola + educyear + quintil1+ (1|idencuesta),data = dfreg)
+  )
 
-texreg::screenreg(health)
+texreg::screenreg(health,include.ci = FALSE)
 
 pensions <- 
 list(
-  # lme4::lmer(just_pension~porc_low +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~porc_high +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = dfreg),
-  lme4::lmer(just_pension~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_pension~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(just_pension~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-     lme4::lmer(just_pension~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-     lme4::lmer(just_pension~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
+  lmer(just_pension~porc_low + porc_high+ (1|idencuesta),data = dfreg),
+  lmer(just_pension~isei_avg + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_pension~isei_avg + diversity + ola + educyear + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(just_pension~isei_avg + diversityclass + ola + educyear + quintil1+ (1|idencuesta),data = dfreg)
 )
 
-texreg::screenreg(pensions)
+texreg::screenreg(pensions,include.ci = FALSE)
+
+market <- 
+list(
+  lmer(market~ ola + diversity + (1|idencuesta),data = dfreg),
+  lmer(market~ diversity + ola + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(market~ diversity + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lmer(market~ diversity + ola + educyear + quintil1 + egp8_r_label_na + (1+diversity|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(market,include.ci = FALSE)
+
+market2 <- 
+list(
+  lmer(market2~ ola + diversity + (1|idencuesta),data = dfreg),
+  lmer(market2~ diversity + ola + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(market2~ diversity + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lmer(market2~ diversity + ola + educyear + quintil1 + egp8_r_label_na + (1|idencuesta),data = dfreg)
+)
+
+texreg::screenreg(market2,include.ci = FALSE)
 
 salarygaps <- 
 list(
-  # lme4::lmer(just_pension~porc_low +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~ porc_middle + (1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~porc_high +(1|idencuesta),data = dfreg),
-  # lme4::lmer(just_pension~porc_low + porc_middle +porc_high +(1|idencuesta),data = dfreg),
-  lme4::lmer(justgapptile~porc_low + porc_high + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(justgapptile~isei_avg + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-  lme4::lmer(justgapptile~isei_avg + diversity + n_total +ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-     lme4::lmer(justgapptile~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
-     lme4::lmer(justgapptile~isei_avg + diversityclass + n_total + ola + educyear + quintil1 + (1|idencuesta),data = dfreg)
-)
+  lmer(justgapptile~ ola + diversity + (1|idencuesta),data = dfreg),
+  lmer(justgapptile~ diversity + ola + quintil1+ (1|idencuesta),data = dfreg),
+  lmer(justgapptile~ diversity + ola + educyear + quintil1 + (1|idencuesta),data = dfreg),
+  lmer(justgapptile~ diversity + ola + educyear + quintil1 + egp8_r_label_na + (1|idencuesta),data = dfreg),
+  lmer(justgapptile~ diversity + ola + educyear + quintil1 + egp8_r_label_na +  percgapptile + (1|idencuesta),data = dfreg)
+  )
 
 texreg::screenreg(salarygaps)
+```
+
+```{r just-class-status}
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>% 
+  group_by(egp8_r_label) %>% 
+  summarise(perc=mean(just_educ,na.rm = T),Status="1. Education"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(egp8_r_label) %>% 
+  summarise(perc=mean(just_salud,na.rm = T),Status="2. Health"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(egp8_r_label) %>% 
+  summarise(perc=mean(just_pension,na.rm = T),Status="3. Pensions")
+) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(egp8_r_label),y = perc, group=Status, color=Status)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(1,5)) +
+  # scale_x_discrete(labels=c("2016","2018","2021")) +
+  labs(title = "Market-based distribution of social services by Class (Wave 1)",x="Class",y=NULL) +
+  theme()
+
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>% 
+  group_by(quintil1) %>% 
+  summarise(perc=mean(just_educ,na.rm = T),Status="1. Education"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(quintil1) %>% 
+  summarise(perc=mean(just_salud,na.rm = T),Status="2. Health"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(quintil1) %>% 
+  summarise(perc=mean(just_pension,na.rm = T),Status="3. Pensions")
+) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(quintil1),y = perc, group=Status, color=Status)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(1,5)) +
+  # scale_x_discrete(labels=c("2016","2018","2021")) +
+  labs(title = "Market-based distribution of social services by income (Wave 1)",x="Income",y=NULL) +
+  theme()
 
 
+bind_rows(
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>% 
+  group_by(educ) %>% 
+  summarise(perc=mean(just_educ,na.rm = T),Status="1. Education"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(educ) %>% 
+  summarise(perc=mean(just_salud,na.rm = T),Status="2. Health"),
+elsoc_long_2016_2022.2 %>%
+  filter(ola==1) %>%   
+  group_by(educ) %>% 
+  summarise(perc=mean(just_pension,na.rm = T),Status="3. Pensions")
+) %>% 
+  na.omit() %>% 
+  ggplot(aes(x=factor(educ),y = perc, group=Status, color=Status)) +
+  geom_point()+
+  geom_line() +
+  scale_y_continuous(limits = c(1,5)) +
+  # scale_x_discrete(labels=c("2016","2018","2021")) +
+  labs(title = "Market-based distribution of social services by education (Wave 1)",x="Income",y=NULL) +
+  theme()
+```
 
 
+```{r}
+library(dplyr)
 
+# Example data
+data <- data.frame(
+  subject = c("A", "A", "A", "A", "B", "B", "B", "B"),
+  time = c(1, 2, 3, 4, 1, 2, 3, 4),
+  Y = c(1, 2, NA, 4, 3, 4, NA, 6)
+)
 
+# Copy values from time 4 to time 3 within each subject
+data_imputed <- data %>%
+  group_by(subject) %>%
+  mutate(Y = if_else(time == 3 & is.na(Y), last(Y[time == 4]), Y)) %>%
+  ungroup()
+
+# Print the result
+print(data_imputed)
 
 ```
 
 
-
-```{r}
+```{r fix-wave1}
 # Select variables______________________________________________________________
 
 df_study1 <- 
@@ -1375,7 +1514,7 @@ sjPlot::view_df(df_study1_long_t6,
 ```
 
 
-```{r}
+
 
 
 ## Contextual data

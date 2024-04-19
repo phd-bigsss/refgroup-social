@@ -918,6 +918,8 @@ sjmisc::frq(elsoc_long_2016_2022.2$educyear)
 
 # Household income_________________________________________
 
+# poverty (<50 per cent of median income), below average (>¼50 per cent and <100 per cent), above average (>¼100 per cent and <200 per cent), and affluence (>¼200 per cent).
+
 #Impute midpoint of income ranges
 elsoc_long_2016_2022.2$m30_rec <-
 as.numeric(car::recode(elsoc_long_2016_2022.2$m30,
@@ -968,6 +970,7 @@ elsoc_long_2016_2022.2 <-
                             ola == 3 ~ m54,
                             ola == 4 ~ m54,
                             ola == 5 ~ m54))
+
 sjmisc::frq(elsoc_long_2016_2022.2$n_hogar)
 
 #Recode DK/DA to NA

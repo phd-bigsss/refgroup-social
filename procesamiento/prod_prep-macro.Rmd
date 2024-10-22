@@ -1,0 +1,56 @@
+---
+title: "Data preparation - macro"
+date: "`r format(Sys.time(), '%A %d %B %Y %X')`"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+      number_sections: yes
+    code_folding: hide
+    number_sections: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+options(scipen=9999) # desactivar notacion cientifica
+```
+
+## Individual data
+
+```{r}
+remove(list = ls()) # clean workspace
+if (!require("pacman")) install.packages("pacman") # install pacman
+pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2,DIGCLASS,spatstat)# load libraries
+load(file = here::here("input/data/proc/study2.RData"))
+
+
+cit<- read.table(here::here("input/data/original/ELSOC_CIT_Dataset_2016.tab"),header = 1)
+
+context <- 
+cit %>% 
+  select(idencuesta:ciudad,
+         starts_with("accs"),
+         starts_with("nived"),
+         starts_with("sded"),giniciu,segrciu,ingpciu,pobreciu)
+context$accsciu[context$accsciu==994] <- NA
+context$accscom[context$accscom==994] <- NA
+summary(context$accscom)
+```
+
+#merge
+```{r}
+elsoc_long_context <- 
+left_join(elsoc_long,context,by="idencuesta")
+save(elsoc_long_context,file = here::here("input/data/proc/study2_context.RData"))
+```
+

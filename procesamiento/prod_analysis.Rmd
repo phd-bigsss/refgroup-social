@@ -20,53 +20,380 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 options(scipen=9999) # desactivar notacion cientifica
 ```
 
-```{css, echo=FALSE}
-# /* expandir el espacio del documento*/
-body .main-container {
-      max-width: 1600px !important;
-      width: 1600px !important;
-    }
+```{r}
+set1 <-  RColorBrewer::brewer.pal(n = 8, name = "Set1")
+options(ggplot2.discrete.fill = set1)
+options(ggplot2.discrete.colour = set1)
+ggplot2::theme_set(ggplot2::theme_bw())
+ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
+options(scipen=999)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(dplyr,ggplot2,haven,ggrepel,gridExtra,panelr)  
+rm(list=ls())
+load(here::here("input/data/proc/study2.RData"))
+```
 
-#/* expandir width de la TOC*/
-div.tocify {
-    width: 22% !important;
-    max-width: 331px !important;
-    max-height: 102% !important;
+```{r}
+dfreg <-
+elsoc_long %>%
+  group_by(idencuesta) %>%
+  mutate(just_educ = if_else(ola == 5 & is.na(just_educ), last(just_educ[ola == 6]), just_educ),
+         just_salud = if_else(ola == 5 & is.na(just_salud), last(just_salud[ola == 6]), just_salud),
+         just_pension = if_else(ola == 5 & is.na(just_pension), last(just_pension[ola == 6]), just_pension)) %>%
+  ungroup()
+
+dfreg$market<- rowMeans(dfreg[,c("just_educ","just_salud","just_pension")],na.rm = T)
+dfreg$market <- ((dfreg$market-min(dfreg$market,na.rm = T))/(max(dfreg$market,na.rm = T)-min(dfreg$market,na.rm = T)))*100
+sjlabelled::set_label(dfreg$market) <- "Market-based distribution of social services (3 items)"
+dfreg$market2<- rowMeans(dfreg[,c("just_educ","just_salud")],na.rm = T)
+dfreg$market2 <- ((dfreg$market2-min(dfreg$market2,na.rm = T))/(max(dfreg$market2,na.rm = T)-min(dfreg$market2,na.rm = T)))*100
+sjlabelled::set_label(dfreg$market2) <- "Market-based distribution of social services (2 items)"
+
+```
+
+
+```{r}
+rm(list=ls())
+load(here::here("input/data/proc/study2.RData"))
+pacman::p_load(correlation,lme4,plm,panelr,texreg,dplyr,estimatr)  
+dfreg <-
+elsoc_long %>%
+  group_by(idencuesta) %>%
+  mutate(just_educ = if_else(ola == 5 & is.na(just_educ), last(just_educ[ola == 6]), just_educ),
+         just_salud = if_else(ola == 5 & is.na(just_salud), last(just_salud[ola == 6]), just_salud),
+         just_pension = if_else(ola == 5 & is.na(just_pension), last(just_pension[ola == 6]), just_pension)) %>%
+  ungroup()
+
+dfreg$market<- rowMeans(dfreg[,c("just_educ","just_salud","just_pension")],na.rm = T)
+dfreg$market <- ((dfreg$market-min(dfreg$market,na.rm = T))/(max(dfreg$market,na.rm = T)-min(dfreg$market,na.rm = T)))*100
+sjlabelled::set_label(dfreg$market) <- "Market-based distribution of social services (3 items)"
+dfreg$market2<- rowMeans(dfreg[,c("just_educ","just_salud")],na.rm = T)
+dfreg$market2 <- ((dfreg$market2-min(dfreg$market2,na.rm = T))/(max(dfreg$market2,na.rm = T)-min(dfreg$market2,na.rm = T)))*100
+sjlabelled::set_label(dfreg$market2) <- "Market-based distribution of social services (2 items)"
+
+df1 <-  
+dfreg %>%
+  filter(ola %in% c(1,3,5) & muestra == 1) %>%
+  select(id="idencuesta",ola,
+         diversityclass=diversity,
+         # market=market2,
+         market,
+         # diversityclass,
+         starts_with("ps_"),
+         quintil_fx=quintil,
+         educyear_fx=educyear,
+         class=egp8_hh_label_na,
+         edad_fx,
+         sexo_fx,
+         perineq,effort,talent,n_total,weights1=ponderador_long_total) %>% 
+  arrange(ola) %>% 
+  # mutate(id=as.character()) %>% 
+  na.omit()
+
+table(df1$ola)
+df1$time <- df1$ola
+df1$ola <- NULL
+
+
+models <- 
+list(
+lmer(market ~ time +(1| id), data = df1,weights = ),
+lmer(market ~ time + diversityclass+ (1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+# lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class*time+(time|id),data=df1)
+# lmer(market ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(market ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(market ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+
+
+models <- 
+list(
+lm_robust(market ~ time ,fixed_effects = ~ id, data = df1,weights = weights1),
+lm_robust(market ~ time + diversityclass,fixed_effects = ~ id,data=df1,weights = weights1),
+lm_robust(market ~ time + diversityclass+quintil_fx,fixed_effects = ~ id,data=df1,weights = weights1),
+lm_robust(market ~ time + diversityclass+quintil_fx+educyear_fx, fixed_effects = ~ id,data=df1,weights = weights1),
+lm_robust(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx,fixed_effects = ~ id,data=df1,weights = weights1),
+lm_robust(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total,fixed_effects = ~ id,data=df1,weights = weights1),
+lm_robust(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class,fixed_effects = ~ id,data=df1,weights = weights1)
+# ,
+# lm_robust(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+# lmer(market ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class*time+(time|id),data=df1)
+# lmer(market ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(market ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(market ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+
+knitreg(models,ci.force = FALSE)
+```
+
+```{r}
+models <- 
+list( 
+lmer(perineq ~ time +(1| id), data = df1),
+lmer(perineq ~ time + diversityclass+ (1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1) 
+,
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+quintil_fx*time+(time|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+educyear_fx*time+(time|id),data=df1),
+lmer(perineq ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class*time+(time|id),data=df1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+
+screenreg(models, use.ci = F)
+```
+
+# Pro-social behavior
+
+```{r}
+pssocial <- 
+df1 %>% 
+  # filter(time==5) %>% 
+  select(starts_with("ps_"))   
+
+for (i in names(pssocial)) {
+  pssocial[[i]] <- factor(x = pssocial[[i]])
 }
+
+cormat<- polycor::hetcor(pssocial,parallel = T)
+corrplot::corrplot.mixed(cormat$correlations)
+
+
+pssocial_1 <- 
+df1 %>% 
+  filter(time==1) %>%
+  select(id,starts_with("ps_"))  
+
+pssocial_3 <- 
+df1 %>% 
+  filter(time==3) %>%
+  select(id,starts_with("ps_"))  
+
+pssocial_5 <- 
+df1 %>% 
+  filter(time==5) %>%
+  select(id,starts_with("ps_"))  
+
+
+prosocial_wide <- left_join(pssocial_1,pssocial_3,by="id",suffix = c("_w1","_w3"))
+
+
+prosocial_wide <- left_join(prosocial_wide,pssocial_5,by="id")
+
+
+for (i in names(prosocial_wide)) {
+  prosocial_wide[[i]] <- factor(x = prosocial_wide[[i]])
+}
+
+cormat <-
+  prosocial_wide %>% select(starts_with("ps_mone"),starts_with("ps_dona"),starts_with("ps_volu")) %>%
+  # na.omit() %>% 
+  polycor::hetcor(parallel = T,use = "pairwise.complete.obs")
+corrplot::corrplot.mixed(cormat$correlations)
+
+df1$psocial<- rowMeans(df1[,c("ps_mone","ps_dona","ps_volu")],na.rm = T)
 ```
 
 
-## Librerías
+```{r ps_mone}
+models <- 
+list( 
+lmer(ps_mone ~ time +(1| id), data = df1),
+lmer(ps_mone ~ time + diversityclass+ (1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1) 
+,
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(models)
 
-```{r}
-if (!require("pacman")) install.packages("pacman") # instalar pacman
-pacman::p_load(dplyr,       # Manipulacion de datos 
-               haven,       # importar datos en .dta o .sav
-               sjmisc,      # descriptivos y frecuencias
-               sjPlot,      # tablas, plots y descriptivos
-               summarytools,# resumen de dataframe
-               texreg,      # tablas de regresion
-               knitr,       # tablas kable
-               kableExtra,  # tablas kable personalizadas
-               ggplot2,     # plots
-               corrplot     # plot correlacion
-               )
+
+modelsw <- 
+list( 
+lmer(ps_mone ~ time +(1| id), data = df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+ (1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1,weights = weights1) 
+,
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_mone ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1,weights = weights1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(modelsw)
 ```
 
-## Datos
-```{r}
-load(file = "../input/data/proc/df_final.Rdata" )
+```{r ps_dona}
+models <- 
+list( 
+lmer(ps_dona ~ time +(1| id), data = df1),
+lmer(ps_dona ~ time + diversityclass+ (1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1) 
+,
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(models)
+
+
+modelsw <- 
+list( 
+lmer(ps_dona ~ time +(1| id), data = df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+ (1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1,weights = weights1) 
+,
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_dona ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1,weights = weights1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(modelsw)
 ```
 
-# Análisis
+```{r ps_volu}
+models <- 
+list( 
+lmer(ps_volu ~ time +(1| id), data = df1),
+lmer(ps_volu ~ time + diversityclass+ (1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1) 
+,
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(models)
 
-## Descriptivos univariados
 
-## Descriptivos bivariadas
+modelsw <- 
+list( 
+lmer(ps_volu ~ time +(1| id), data = df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+ (1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1,weights = weights1) 
+,
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1,weights = weights1),
+lmer(ps_volu ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1,weights = weights1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(modelsw)
+```
 
-## Estimaciones - modelos
+```{r pssocial}
+models <- 
+list( 
+lmer(psocial ~ time +(1| id), data = df1),
+lmer(psocial ~ time + diversityclass+ (1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1) 
+,
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(models)
 
 
-
+modelsw <- 
+list( 
+lmer(psocial ~ time +(1| id), data = df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+ (1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx +(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(1|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+perineq+(diversityclass|id),data=df1,weights = weights1) 
+,
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+quintil_fx*time+(time|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+educyear_fx*time+(time|id),data=df1,weights = weights1),
+lmer(psocial ~ time + diversityclass+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+perineq+class*time+(time|id),data=df1,weights = weights1)
+# ,
+# lmer(perineq ~ time + diversityclass*quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*educyear_fx+quintil_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1),
+# lmer(perineq ~ time + diversityclass*class+quintil_fx+educyear_fx+edad_fx+sexo_fx+n_total+class+(diversityclass|id),data=df1)
+)
+screenreg(modelsw)
+```
 
 

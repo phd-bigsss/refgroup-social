@@ -1,0 +1,275 @@
+---
+title: "Supplementary material"
+# date: "`r format(Sys.time(), '%A %d %B %Y %X')`"
+output: 
+  html_document: 
+    toc: yes
+    code_folding: hide
+    toc_float: 
+      collapsed: true
+      smooth_scroll: false
+      number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+options(scipen=9999) # desactivar notacion cientifica
+```
+
+```{r dfreg}
+set1 <-  RColorBrewer::brewer.pal(n = 8, name = "Set1")
+options(ggplot2.discrete.fill = set1)
+options(ggplot2.discrete.colour = set1)
+ggplot2::theme_set(ggplot2::theme_bw())
+ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
+options(scipen=999)
+if (!require("pacman")) install.packages("pacman")
+rm(list=ls())
+# load(here::here("input/data/proc/study2.RData"))
+load(here::here("input/data/proc/study2.RData")); elsoc_long<- elsoc_long
+pacman::p_load(correlation,lme4,plm,panelr,texreg,dplyr,estimatr,marginaleffects,ggplot2,sjmisc,MLMusingR,ordinal)  
+dfreg <-
+elsoc_long %>%
+  group_by(idencuesta) %>%
+  mutate(just_educ = if_else(ola == 5 & is.na(just_educ), last(just_educ[ola == 6]), just_educ),
+         just_salud = if_else(ola == 5 & is.na(just_salud), last(just_salud[ola == 6]), just_salud),
+         just_pension = if_else(ola == 5 & is.na(just_pension), last(just_pension[ola == 6]), just_pension)
+         ) %>%
+  ungroup()
+
+dfreg$market<- rowMeans(dfreg[,c("just_educ","just_salud","just_pension")],na.rm = T)
+dfreg$market <- ((dfreg$market-min(dfreg$market,na.rm = T))/(max(dfreg$market,na.rm = T)-min(dfreg$market,na.rm = T)))*100
+sjlabelled::set_label(dfreg$market) <- "Market-based distribution of social services (3 items)"
+
+dfreg$just_educ <- ((dfreg$just_educ-min(dfreg$just_educ,na.rm = T))/(max(dfreg$just_educ,na.rm = T)-min(dfreg$just_educ,na.rm = T)))*100
+dfreg$just_salud <- ((dfreg$just_salud-min(dfreg$just_salud,na.rm = T))/(max(dfreg$just_salud,na.rm = T)-min(dfreg$just_salud,na.rm = T)))*100
+dfreg$just_pension <- ((dfreg$just_pension-min(dfreg$just_pension,na.rm = T))/(max(dfreg$just_pension,na.rm = T)-min(dfreg$just_pension,na.rm = T)))*100
+
+# Deflator
+# For 2021: CPI = 100 (base year)
+# For 2019: IPC = 3.0%
+# For 2018: IPC = 2.6%
+# For 2017: IPC = 2,3#
+# For 2016: IPC = 2.7%
+
+# The CPI values relative to 2021 are:
+# 2019 CPI: 97.09
+# 2018 CPI: 97.47
+# 2017 CPI: 97.75
+# 2016 CPI: 97.37
+
+dfreg$cpi <- dfreg$ola
+dfreg$cpi <- car::recode(dfreg$cpi,"1=97.37;2=97.75;3=97.47;4=97.09;5=100")
+dfreg$real_income <- as.numeric((dfreg$ing_pc/dfreg$cpi)* 100)
+dfreg$real_income_eq <- as.numeric((dfreg$ing_pc_eq/dfreg$cpi)* 100)
+summary(dfreg$real_income)
+summary(dfreg$real_income_eq)
+
+dfreg$ing_pc_100 <- (dfreg$real_income_eq) # each unit is 100.000 CLP
+dfreg$percentile <- ntile(dfreg$ing_pc_100,100)
+
+
+df1 <-  
+dfreg %>%
+  filter(muestra==1) %>%
+  filter(ola %in% c(1,2,3,4,6,7)) %>%
+  # filter(m0_edad %in% c(15:64)) %>%
+  filter(ing_pc>0) %>%
+  select(id="idencuesta",ola,
+         # diversityclass=iqvclass,know_total,
+         # crossclass,isei_sd,
+         # strong_tie_t1,
+         empst,
+         just_educ,
+         just_salud,
+         just_pension,
+         market,
+         income=ing_pc_100,
+         educ=educyear,
+         # class=isei08res,
+         age=m0_edad,
+         sex=sexo_fx,
+         weights1=ponderador_long_total,
+         ponderador01,ponderador02
+         ) %>%
+  mutate(income=log(income)) %>%
+  arrange(ola)
+table(df1$ola)
+
+
+df1 <-   na.omit(df1)
+
+# # fix to complete cases
+# idfreq<- frq(df1$id) %>% data.frame() %>% select(val,frq);filter<- idfreq %>% filter(frq>=2);df1 <- df1 %>% filter(id %in% filter$val)
+# 
+# dim(df1)
+# 
+df1$time <- as.numeric(df1$ola)
+# table(df1$time)
+# # Model w/o isei range
+# model_wo_range <- 'diversitycfa_norange =~ diversityclass+crossclass + isei_sd+know_total'
+# fit_range<- lavaan::cfa(model = model_wo_range,data = df1,cluster = "id",
+#                         sampling.weights = "weights1"
+#                         )
+# lavaan::summary(fit_range,standardized=T,fit.measures=T)
+# # Model using blau, sd, extensivity and number of different "social classes" known (cross-class) is the best
+# 
+# factorscores<- lavaan::lavPredict(fit_range,newdata = df1)
+# idx <- lavaan::lavInspect(fit_range, "case.idx")
+# fscores <- lavaan::lavPredict(fit_range)
+# ## loop over factors
+# for (fs in colnames(fscores)) {
+#   df1[idx, fs] <- fscores[ , fs]
+# }
+# 
+# df1 <- df1 %>% rename(diversitycfa=diversitycfa_norange);df1$diversityclass <- df1$diversitycfa 
+paneldata <- panelr::panel_data(df1, id = id, wave = time)
+```
+
+```{r mean-center}
+df1 <-
+df1 %>% 
+  mutate(
+    # diversity_gc=MLMusingR::group_center(x = as.numeric(diversityclass),grp = id),
+    # diversity_gm=MLMusingR::group_mean(x = as.numeric(diversityclass),grp = id),
+    age_gc=MLMusingR::group_center(x = as.numeric(age),grp = id),
+    age_gm=MLMusingR::group_mean(x = as.numeric(age),grp = id),
+    income_gm=MLMusingR::group_mean(x = as.numeric(income),grp = id),
+    income_gc=MLMusingR::group_center(x = as.numeric(income),grp = id),
+    educ_gm=MLMusingR::group_mean(x = as.numeric(educ),grp = id),
+    educ_gc=MLMusingR::group_center(x = as.numeric(educ),grp = id),
+    empst_gm=MLMusingR::group_mean(x = as.numeric(empst),grp = id),
+    empst_gc=MLMusingR::group_center(x = as.numeric(empst),grp = id)
+    )
+
+df1$just_educ <- scale(df1$just_educ)
+df1$just_salud <- scale(df1$just_salud)
+df1$just_pension <- scale(df1$just_pension)
+df1$market <- scale(df1$market)
+df1$income_gc <- scale(df1$income_gc) # "those above their historical average"
+df1$income_gm <- scale(df1$income_gm) # "their historical average"
+df1$educ_gc <- scale(df1$educ_gc) # "those above their historical average"
+df1$educ_gm <- scale(df1$educ_gm) # "their historical average"
+# df1 <-
+# df1 %>% 
+#   mutate(
+#     class_gm=MLMusingR::group_mean(x = as.numeric(class),grp = id),
+#     class_gc=MLMusingR::group_center(x = as.numeric(class),grp = id)
+#     )
+
+class(df1)
+```
+
+# Multinivel 
+
+```{r}
+# Hypothesis___________________________________________________________________
+divtimeL <-"factor(time)"
+divgm    <-"factor(time)+income_gm+educ_gm+age_gm+empst_gm+sex"
+divcwc   <-"factor(time)+income_gc+educ_gc+age_gc+empst_gc+sex"
+divwbfull<-paste0(divgm,"+",divcwc)
+# divwbb_int4<-paste0(divwbfull,"+","income_gm*percgaplog+income_gc*percgaplog")
+# divwbb_int3<-paste0(divwbfull,"+","class*diversity_gc")
+
+hipotesis <- c(divtimeL,divgm,divcwc,divwbfull)
+# Set the independent variables (IVs)
+
+# df1$just_educ <- as.factor(df1$just_educ)
+# df1$just_salud <- as.factor(df1$just_salud)
+# df1$just_pension <- as.factor(df1$just_pension)
+
+ivs<- as.data.frame(df1) %>% select(just_educ,just_salud,just_pension,market) %>%  names()
+
+# Create the object for each model
+models <- list()
+for (i in ivs) {
+models[[i]] <- paste0(i,"~",hipotesis,"+(1|id)")  
+}
+
+# Estimate the multilevel models
+fits <- list()
+for (i in ivs) {
+  for (z in models[[i]][1:length(hipotesis)]) {
+    fits[[z]] <- lme4::lmer(formula = z, data = df1,weights = weights1)
+    # fits[[z]] <- ordinal::clmm(formula = z, data = df1,weights = weights1)
+  }
+}
+# change model names within list
+names(fits) <- paste0(rep(ivs,each=length(hipotesis)),1:length(hipotesis))
+
+# Tables_______________________________________________________________________
+omit <- "(empst_gm)|(empst_gc)|(sex)|(age_gm)|(age_gc)|(Intercept)"
+coef_names <- c("Time 2 ","Time 3", 
+                "Diversity (BE)","Income (BE)","Education (BE)",
+                "Diversity (WE)","Income (WE)","Education (WE)",
+                "Diversity (WE) x Income (BE)","Diversity (WE) x Income (WE)",
+                "Diversity (WE) x Education (BE)","Diversity (WE) x Education (WE)"
+                # "Diversity (WE) x ISEI (Medium)","Diversity (WE) x ISEI (High)"
+                )
+var_groups  <- list(
+    "Time (ref: Time 1)" = 1:2,
+    "Between-person estimates" = 4:6,
+    "Within-person estimates" = 7:9,
+    "Interactions" = 10:13
+  )
+
+
+screenreg(l = fits[names(fits)[grepl("just_educ", names(fits),"\n")]],single.row = F,
+        omit.coef = omit,
+        # groups = var_groups,
+        # custom.coef.names = coef_names,
+        caption = "Longitudinal multilevel models for market justice in education, network diversity and socioeconomic status",
+        caption.above = T,
+        # file = "output/tables/justeduc_mixed.html",
+          )
+screenreg(l = fits[names(fits)[grepl("just_salud", names(fits),"\n")]],single.row = F,
+          omit.coef = omit,
+          # groups = var_groups,
+          # custom.coef.names = coef_names,
+        caption = "Longitudinal multilevel models for market justice in health, network diversity and socioeconomic status",
+        caption.above = T,
+        # file = "output/tables/justsalud_mixed.html",
+          )
+screenreg(l = fits[names(fits)[grepl("just_pension", names(fits),"\n")]],single.row = F,
+          omit.coef = omit,
+          # groups = var_groups,
+          # custom.coef.names = coef_names,
+        caption = "Longitudinal multilevel models for market justice in pensions, network diversity and socioeconomic status",
+        caption.above = T,
+        # file = "output/tables/justpensions_mixed.html",
+          )
+
+screenreg(l = fits[names(fits)[grepl("market", names(fits),"\n")]],single.row = F,
+          omit.coef = omit,
+          # groups = var_groups,
+          # custom.coef.names = coef_names,
+        caption = "Longitudinal multilevel models for market justice preferences, network diversity and socioeconomic status",
+        caption.above = T,
+        # file = "output/tables/market_mixed.html",
+          )
+```
+
+
+# Fixed effects regression
+
+```{r}
+library(plm) 
+library(panelr)
+# paneldata <- panelr::panel_data(df1, id = id, wave = time)
+# paneldata <- paneldata %>% filter(time %in% c(1,3,5))
+
+#test tge haussman indica que es mejor usar FE con two-way 
+mkt_educ <- plm(just_educ ~ time+age+income+educ+sex,data=paneldata,weights = weights1,model = "within")
+mkt_salu <- plm(just_salud ~ time+age+income+educ+sex ,data=paneldata,weights = weights1, model="within")
+mkt_pens <- plm(just_pension ~ time+age +income +educ+sex ,data=paneldata,weights = weights1, model="within")
+mkt_just <- plm(market ~ time+age +income +educ+sex ,data=paneldata,weights = weights1, model="within")
+
+market_models_fe <- list(mkt_just)
+screenreg(market_models_fe,stars = c(0.001,0.01,0.05,0.1))
+```
+
+

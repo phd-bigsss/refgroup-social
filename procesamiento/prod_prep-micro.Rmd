@@ -249,6 +249,15 @@ class(elsoc_long_2016_2022.2$educyear)
 sjmisc::frq(elsoc_long_2016_2022.2$educyear)
 
 # Household income_________________________________________
+Ltop_1<- 1850001
+Ltop  <- 2700000
+
+ftop_1 <- 14
+ftop   <- 10
+
+V  = (log(ftop_1 + ftop) - log(ftop)) / (log(Ltop) -log(Ltop_1))
+M_top = 0.5* Ltop *(1+(V/(V-1))) # = $ 3.726.106
+
 
 #Impute midpoint of income ranges
 elsoc_long_2016_2022.2$m30_rec <-
@@ -339,6 +348,16 @@ summary(elsoc_long_2016_2022.2$inc_ind)
 # (665001 + 850000) / 2,
 # (850001 + 1300000) / 2,
 # 1300001)    
+
+
+Ltop_1<- 850001
+Ltop  <- 1300001 
+ftop_1 <- 16
+ftop   <- 9
+
+V  = (log(ftop_1 + ftop) - log(ftop)) / (log(Ltop) -log(Ltop_1))
+M_top = 0.5* Ltop *(1+(V/(V-1))) # = $1.762.784
+
 elsoc_long_2016_2022.2$m14_rec<- 
   car::recode(elsoc_long_2016_2022.2$m14,
               "1=40000.0;2=62500.5;3=105000.5;4=147500.5;5=190000.5;6=220000.5;

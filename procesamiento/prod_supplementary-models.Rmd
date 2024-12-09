@@ -268,8 +268,138 @@ mkt_salu <- plm(just_salud ~ time+age+income+educ+sex ,data=paneldata,weights = 
 mkt_pens <- plm(just_pension ~ time+age +income +educ+sex ,data=paneldata,weights = weights1, model="within")
 mkt_just <- plm(market ~ time+age +income +educ+sex ,data=paneldata,weights = weights1, model="within")
 
-market_models_fe <- list(mkt_just)
+market_models_fe <- list(mkt_educ,mkt_salu,mkt_pens,mkt_just)
 screenreg(market_models_fe,stars = c(0.001,0.01,0.05,0.1))
 ```
 
+# Alternative operationalization 
+
+_Income_
+
+```{r}
+dfreg <- 
+dfreg %>% 
+  # group_by(ola) %>% 
+  mutate(percentile_wave=ntile(ing_pc_100,100),
+         bot_mid_top_wave=car::recode(percentile_wave,"1:20=1;21:79=2;80:100=3"))
+
+elsoc_wide <- widen_panel(panel_data(dfreg %>% select(idencuesta,ola,percentile_wave,bot_mid_top_wave), id = idencuesta, wave = ola), separator = "_")
+elsoc_wide$income_prof <- paste0(elsoc_wide$bot_mid_top_wave_1,elsoc_wide$bot_mid_top_wave_5)
+frq(elsoc_wide$income_prof)
+# a. Stable low income: In the lowest tertile in all three periods 
+# b. Stable middle income: In the middle tertile in all three periods 
+# c. Stable high income: In the highest tertile in all three periods 
+# d. Upward mobility: In the lowest tertile in the first period and either in tertile 2 or 3 in the last period
+# e. Downward mobility: In the highest tertile in the first period and either in tertile 1 or 2 in the last period
+# f. Other: All other trajectories
+
+elsoc_wide$ind_inc_prof <- car::recode(elsoc_wide$income_prof,"'11'='1stablelow';'33'='2stablemid';'22'='3stablehig';c('12','13')='4upwardmob';c('31','21')='5downwardmob';else = '99other'")
+frq(elsoc_wide$ind_inc_prof)
+# • Stable low income: Start and end at the 20th percentile in income (P20). 
+# • Stable middle income: Start and end at the 50th percentile in income (P50). 
+# • Stable high income: Start and end at the 80th percentile in income (P80). 
+# • Upward mobility: Start at 20th percentile, end at 80th percentile (P20 → P80). 
+# • Downward mobility: Start at 80th percentile, end at 20th percentile (P80 → P20).
+
+df_profiles<- select(elsoc_wide,"idencuesta","ind_inc_prof",percentile_wave_1,percentile_wave_5)
+df_profiles$idencuesta <- as.numeric(as.character(df_profiles$idencuesta))
+
+dfreg <- 
+  dfreg %>% 
+  left_join(select(df_profiles,"idencuesta","ind_inc_prof",percentile_wave_1,percentile_wave_5),by="idencuesta")
+
+```
+
+_Occupation_
+
+```{r}
+frq(is.na(dfreg$isei08res))
+frq(is.na(dfreg$isei08))
+
+dfreg$isei08res_hh <- ifelse(is.na(dfreg$isei08),yes = dfreg$isei08res, no=dfreg$isei08)
+
+frq(is.na(dfreg$isei08res_hh))
+
+```
+
+
+_Market preferences based on Party Identification_ 
+```{r}
+# Value |                                            Label |     N | Raw % | Valid % | Cum. %
+# -------------------------------------------------------------------------------------------
+#     1 |                           Partido Comunista (PC) |   454 |  2.52 |    3.02 |   3.02
+#     2 |                           Partido Humanista (PH) |   232 |  1.29 |    1.54 |   4.57
+#     3 |                      Revolucion Democratica (RD) |   209 |  1.16 |    1.39 |   5.96
+#     4 |                        Partido Progresista (PRO) |    49 |  0.27 |    0.33 |   6.28
+#     5 |                     Evolucion Politica (Evopoli) |   148 |  0.82 |    0.99 |   7.27  *
+#     6 |                  Partido por la Democracia (PPD) |   458 |  2.54 |    3.05 |  10.32
+#     7 |                                         Amplitud |    23 |  0.13 |    0.15 |  10.47
+#     8 |                Partido Democrata Cristiano (PDC) |   582 |  3.23 |    3.87 |  14.35
+#     9 | Partido Regionalista de los Independientes (PRI) |    48 |  0.27 |    0.32 |  14.67
+#    10 |                         Renovacion Nacional (RN) |   670 |  3.71 |    4.46 |  19.13 *
+#    11 |              Union Democrata Independiente (UDI) |   448 |  2.48 |    2.98 |  22.11 *
+#    12 |                           Partido Socialista(PS) |   589 |  3.27 |    3.92 |  26.03
+#    13 |          Partido Radical Social Democrata (PRSD) |    83 |  0.46 |    0.55 |  26.58
+#    14 |                           Otro. Especifique cual |   145 |  0.80 |    0.97 |  27.55
+#    15 |                                          Ninguno | 10595 | 58.75 |   70.54 |  98.09
+#    16 |                         Convergencia Social (CS) |    99 |  0.55 |    0.66 |  98.75
+#    17 |                        Partido de la Gente (PDG) |    60 |  0.33 |    0.40 |  99.15
+#    18 |                        Partido Republicano (PLR) |   111 |  0.62 |    0.74 |  99.89 *
+#    19 |                                  Partido Comunes |    17 |  0.09 |    0.11 | 100.00
+#  <NA> |                                             <NA> |  3015 | 16.72 |    <NA> |   <NA>
+
+# Crear la variable binaria donde 1 es derecha y 0 es izquierda u otros
+dfreg$partido<- ifelse(
+  dfreg$c16 %in% c(5,10,11,18), 1, 0
+)
+
+```
+
+_Social class and ISEI categorical_
+```{r}
+# df1$isei <- car::recode(as.numeric(df1$isei),"1:2='1Service Class';3:4='2Routine nonmanual';5='3Self-employed';6:9='4Working Class';10:11='5Unemployed and Retired'",as.factor = T)
+# df1 <- df1 %>% filter(isei != '5Unemployed and Retired')
+
+# df1$isei <- forcats::fct_rev(df1$isei)
+# df1$isei <- relevel(df1$isei,ref = '3Self-employed')
+# frq(df1$isei)
+
+class_w1 <- df1 %>% filter(ola ==1) %>% select(id,class1=isei)
+class_w3 <- df1 %>% filter(ola ==3) %>% select(id,class3=isei)
+class_w5 <- df1 %>% filter(ola ==5) %>% select(id,class5=isei)
+class_w1w5<- left_join(class_w1,class_w3,by ="id") %>% left_join(class_w5)
+
+class_w1w5$trajectory <- paste0(class_w1w5$class1,class_w1w5$class3,class_w1w5$class5) 
+class_w1w5$class1 <- as.numeric(class_w1w5$class1)
+class_w1w5$class3 <- as.numeric(class_w1w5$class3)
+class_w1w5$class5 <- as.numeric(class_w1w5$class5)
+
+class_w1w5$upward<- ifelse(class_w1w5$class5>class_w1w5$class1 | class_w1w5$class5>class_w1w5$class3 | 
+  class_w1w5$class3>class_w1w5$class1,yes = 1,no = 0)
+frq(class_w1w5$upward)
+class_w1w5$downward<- ifelse(class_w1w5$class5<class_w1w5$class1 | class_w1w5$class5<class_w1w5$class3 | 
+  class_w1w5$class3<class_w1w5$class1,yes = 1,no = 0)
+frq(class_w1w5$downward)
+
+class_w1w5$stable <- ifelse(class_w1w5$downward==0 & class_w1w5$upward==0 | 
+                              class_w1w5$trajectory %in%  c("1NA1","2NA2","3NA3",
+                                                            "11NA","22NA","33NA",
+                                                            "NA11","NA22","NA33"),yes = 1,no = 0) 
+
+class_w1w5$stablelow <- ifelse(class_w1w5$stable==1 & 
+                              class_w1w5$trajectory %in%  c("111","1NA1","11NA","NA11"),yes = 1,no = 0)
+
+frq(class_w1w5$stablelow)
+class_w1w5$stablemid <- ifelse(class_w1w5$stable==1 & 
+                              class_w1w5$trajectory %in%  c("222","2NA2","22NA","NA22"),yes = 1,no = 0)
+frq(class_w1w5$stablemid)
+class_w1w5$stablehig <- ifelse(class_w1w5$stable==1 & 
+                              class_w1w5$trajectory %in%  c("333","3NA3","33NA","NA33"),yes = 1,no = 0)
+frq(class_w1w5$stablemid)
+
+df1 <- df1 %>% left_join(class_w1w5 %>% select(id,upward,downward,stable))
+
+# df1$isei <- car::recode(var = df1$isei,recode="c('IIIa Routine Nonmanual','IIIb Lower Sales-Service')='III Routine Nonmanual';c('V Manual Supervisors','VI Skilled Worker')='V+VI Skilled Worker'")
+# df1$isei <- factor(df1$isei,c("I Higher Controllers","II Lower Controllers","III Routine Nonmanual","IV Self-employed","V+VI Skilled Worker","VII Unskilled Workers","Never worked and long-term unemployed","Retired"))
+```
 

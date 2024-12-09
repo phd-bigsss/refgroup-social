@@ -34,8 +34,10 @@ if (!require("pacman")) install.packages("pacman") # install pacman
 # devtools::install_git("https://code.europa.eu/digclass/digclass.git",force = TRUE)
 
 pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2,DIGCLASS,spatstat)# load libraries
-load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
+# load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
+load(here::here("input/data/original/ELSOC_Long_2016_2023_1.00.RData"))
 
+elsoc_long_2016_2022.2 <- elsoc_long_2016_2023
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-999] <- NA
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-888] <- NA
 elsoc_long_2016_2022.2[elsoc_long_2016_2022.2 ==-777] <- NA
@@ -145,6 +147,7 @@ frq(elsoc_long_2016_2022.2$egp11_label)
 ```
 
 
+
 ```{r social-class-respondent}
 # Respondent Social Class-------------------------------------------------------
 elsoc_long_2016_2022.2$isco88res_2 = isco08_to_isco88(elsoc_long_2016_2022.2$isco08res)
@@ -248,15 +251,21 @@ sjlabelled::set_label(x = elsoc_long_2016_2022.2$educyear,
 class(elsoc_long_2016_2022.2$educyear)
 sjmisc::frq(elsoc_long_2016_2022.2$educyear)
 
-# Household income_________________________________________
+# Household income----------------------------------------------------------------
+
+# Ltop is the lower limit of the top category, Ltop-1 is the lower limit of the category before the
+# top one, ftop is the frequency in the top category, and ftop-1 is the frequency in the
+# category before the top one.
+
+sjmisc::frq(elsoc_long_2016_2022.2$m30)
 Ltop_1<- 1850001
 Ltop  <- 2700000
 
-ftop_1 <- 14
-ftop   <- 10
+ftop_1 <- 42
+ftop   <- 34
 
 V  = (log(ftop_1 + ftop) - log(ftop)) / (log(Ltop) -log(Ltop_1))
-M_top = 0.5* Ltop *(1+(V/(V-1))) # = $ 3.726.106
+M_top = 0.5* Ltop *(1+(V/(V-1)));M_top # = $3.897.232
 
 
 #Impute midpoint of income ranges
@@ -265,13 +274,25 @@ as.numeric(car::recode(elsoc_long_2016_2022.2$m30,
            "1=110000;2=251000;3=305000;4=355000;5=400000;
             6=445000;7=490000;8=535000;9=585000;10=640000;11=700000;12=765000;
             13=845000;14=935000;15=1040000;16=1180000;17=1375000;18=1670000;
-            19=2275000;20=2700000;NA=NA;c(-888,-999)=NA"))
+            19=2275000;20=3897232;NA=NA;c(-888,-999)=NA"))
 
 summary(elsoc_long_2016_2022.2$m30_rec)
+
+
 #Impute midpoint of income ranges (2021)
+
+frq(elsoc_long_2016_2022.2$m30b)
+Ltop_1<- 450000
+Ltop  <- 700000
+ftop_1 <- 18
+ftop   <- 27
+
+V  = (log(ftop_1 + ftop) - log(ftop)) / (log(Ltop) -log(Ltop_1))
+M_top = 0.5* Ltop *(1+(V/(V-1))) # = $2.941.412
+
 elsoc_long_2016_2022.2$m30b_rec <-
 as.numeric(car::recode(elsoc_long_2016_2022.2$m30b,
-           "1=125000;2=300000;3=400000;4=575000;5=70000;NA=NA;c(-888,-999)=NA"))
+           "1=125000;2=300000;3=400000;4=575000;5=2941412;NA=NA;c(-888,-999)=NA"))
 summary(elsoc_long_2016_2022.2$m30b_rec)
 
 # Combine m30_rec with m30b_rec
@@ -307,7 +328,9 @@ elsoc_long_2016_2022.2 <-
                             ola == 2 ~ m46_nhogar,
                             ola == 3 ~ m54,
                             ola == 4 ~ m54,
-                            ola == 5 ~ m54))
+                            ola == 5 ~ m54,
+                            ola == 6 ~ m54,
+                            ola == 7 ~ m54))
 
 summary(elsoc_long_2016_2022.2$n_hogar)
 #imputar tamanio del hogar de ola 5 a ola 6
@@ -349,20 +372,20 @@ summary(elsoc_long_2016_2022.2$inc_ind)
 # (850001 + 1300000) / 2,
 # 1300001)    
 
-
+frq(elsoc_long_2016_2022.2$m14)
 Ltop_1<- 850001
 Ltop  <- 1300001 
-ftop_1 <- 16
-ftop   <- 9
+ftop_1 <- 65
+ftop   <- 40
 
 V  = (log(ftop_1 + ftop) - log(ftop)) / (log(Ltop) -log(Ltop_1))
-M_top = 0.5* Ltop *(1+(V/(V-1))) # = $1.762.784
+M_top = 0.5* Ltop *(1+(V/(V-1))) # = $1.811.247
 
 elsoc_long_2016_2022.2$m14_rec<- 
   car::recode(elsoc_long_2016_2022.2$m14,
               "1=40000.0;2=62500.5;3=105000.5;4=147500.5;5=190000.5;6=220000.5;
               7=255000.5;8=300000.5;9=340000.5;10=380000.5;11=432500.5;12=502500.5;
-              13=602500.5;14=757500.5;15=1075000.5;16=1300001.0"
+              13=602500.5;14=757500.5;15=1075000.5;16=1811247"
 ) 
 
 elsoc_long_2016_2022.2$inc_ind <- ifelse(elsoc_long_2016_2022.2$n_hogar_r==1 & is.na(elsoc_long_2016_2022.2$inc_ind),elsoc_long_2016_2022.2$m14_rec,elsoc_long_2016_2022.2$inc_ind)

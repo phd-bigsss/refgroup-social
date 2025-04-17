@@ -106,10 +106,66 @@ dfreg$univ <- car::recode(as.numeric(dfreg$educ),"5=1;1:4=0")
 dfreg$class8 <- car::recode(as.numeric(dfreg$egp8_r_label_na.x),"1:2='1Service Class';3:4='2Routine nonmanual';5='3Self-employed';6:9='4Working Class';10:11='5Unemployed and Retired'",as.factor = T)
 # dfreg$class8 <- relevel(x = dfreg$class8,ref = '4Working Class')
 
+library(dplyr)
+
+# Compute weighted mean, variance, and SD of ISEI for each respondent
+dfreg <- dfreg %>%
+  rowwise() %>%  # Operate row-by-row
+  mutate(
+    # Step 1: Total number of known people (sum of all n_* variables)
+    total_n = sum(
+      n_doctor, n_ceo, n_lawyer, n_univprof, n_account, n_secret,
+      n_shopassi, n_kinder, n_waiter, n_carmech, n_taxi, n_stvend, n_cleaner,
+      na.rm = TRUE  # Ignore NAs when summing
+    ),
+
+    # Step 2: Weighted mean of ISEI (sum(isei * n) / total_n)
+    mean_isei = sum(
+      isei_doctor   * n_doctor,
+      isei_ceo      * n_ceo,
+      isei_lawyer   * n_lawyer,
+      isei_univprof * n_univprof,
+      isei_account  * n_account,
+      isei_secret   * n_secret,
+      isei_shopassi * n_shopassi,
+      isei_kinder   * n_kinder,
+      isei_waiter   * n_waiter,
+      isei_carmech  * n_carmech,
+      isei_taxi     * n_taxi,
+      isei_stvend   * n_stvend,
+      isei_cleaner  * n_cleaner,
+      na.rm = TRUE
+    ) / total_n,
+
+    # Step 3: Weighted variance: sum(w * (x - mean)^2) / total_n
+    var_isei = sum(
+      n_doctor   * (isei_doctor   - mean_isei)^2,
+      n_ceo      * (isei_ceo      - mean_isei)^2,
+      n_lawyer   * (isei_lawyer   - mean_isei)^2,
+      n_univprof * (isei_univprof - mean_isei)^2,
+      n_account  * (isei_account  - mean_isei)^2,
+      n_secret   * (isei_secret   - mean_isei)^2,
+      n_shopassi * (isei_shopassi - mean_isei)^2,
+      n_kinder   * (isei_kinder   - mean_isei)^2,
+      n_waiter   * (isei_waiter   - mean_isei)^2,
+      n_carmech  * (isei_carmech  - mean_isei)^2,
+      n_taxi     * (isei_taxi     - mean_isei)^2,
+      n_stvend   * (isei_stvend   - mean_isei)^2,
+      n_cleaner  * (isei_cleaner  - mean_isei)^2,
+      na.rm = TRUE
+    ) / total_n,
+
+    # Step 4: Standard deviation = square root of variance
+    sd_isei = sqrt(var_isei)
+  ) %>%
+  ungroup()
+
+
+
 dfreg$isei_cv <- (dfreg$isei_sd/dfreg$isei_avg)*100;summary(dfreg$isei_cv)
+dfreg$isei_cv2 <- (dfreg$sd_isei/dfreg$mean_isei)*100;summary(dfreg$isei_cv2)
 
 
-(dfreg$isei_tot/dfreg$n_total)
 
 df1 <-  
 dfreg %>%
@@ -120,7 +176,7 @@ dfreg %>%
          know_total,
          crossclass,
          isei_sd,
-         isei_cv,
+         isei_cv=isei_cv2,
          isei_range,
          isei_avg,
          n_total,

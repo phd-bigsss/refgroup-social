@@ -30,8 +30,8 @@ options(scipen=9999) # desactivar notacion cientifica
 ```{r}
 remove(list = ls()) # clean workspace
 if (!require("pacman")) install.packages("pacman") # install pacman
-# install.packages("devtools")
-# devtools::install_git("https://code.europa.eu/digclass/digclass.git",force = TRUE)
+install.packages("devtools")
+devtools::install_git("https://code.europa.eu/digclass/digclass.git",force = TRUE)
 
 pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2,DIGCLASS,spatstat)# load libraries
 # load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
@@ -86,6 +86,27 @@ elsoc_long_2016_2022.2 %>%
          sexo=m0_sexo) %>% 
   sjlabelled::drop_labels(., drop.na = FALSE)
 ```
+
+
+```{r}
+frq(elsoc_long_2016_2022.2$m36)
+    # 1 |                                          Casado legalmente | 6574 | 31.67 |   36.00 |  36.00
+    # 2 |                     Conviviente sin Acuerdo de Union Civil | 2304 | 11.10 |   12.62 |  48.61
+    # 3 |                     Conviviente con Acuerdo de Union Civil |   74 |  0.36 |    0.41 |  49.02
+    # 4 |                                                    Soltero | 5701 | 27.46 |   31.22 |  80.24
+    # 5 |                                                      Viudo | 1261 |  6.07 |    6.91 |  87.14
+    # 6 |                                                    Anulado |   84 |  0.40 |    0.46 |  87.60
+    # 7 |                                                 Divorciado | 1119 |  5.39 |    6.13 |  93.73
+    # 8 | Separado (casado legalmente, pero no vive con su esposo/a) | 1126 |  5.42 |    6.17 |  99.90
+    # 9 |                                          Otro. Especifique |   19 |  0.09 |    0.10 | 100.00
+elsoc_long_2016_2022.2$partner <-
+  as.numeric(car::recode(elsoc_long_2016_2022.2$m36,recodes = "1:3=1;4:9=0;else=NA"))
+
+sjlabelled::set_label(elsoc_long_2016_2022.2$partner) <- "Has partner"
+frq(elsoc_long_2016_2022.2$partner)
+table(elsoc_long_2016_2022.2$partner,elsoc_long_2016_2022.2$ola)
+```
+
 
 <!-- https://webapps.ilo.org/public/spanish/bureau/stat/isco/docs/resol08.pdf -->
 
@@ -1285,19 +1306,26 @@ elsoc_long_2016_2022.2 %>%
 
 # Model original
 model_original <- 'diversitycfa =~ diversityclass+isei_range+isei_sd+know_total+crossclass'
-fitoriginal<- lavaan::cfa(model = model_original,data = df_cfa,cluster = "idencuesta",sampling.weights = "ponderador_long_total")
+fitoriginal<- lavaan::cfa(model = model_original,data = df_cfa,
+                          # cluster = "idencuesta",
+                          # sampling.weights = "ponderador_long_total"
+                          )
 lavaan::summary(fitoriginal,standardized=T,fit.measures=T)
 
 # Model w/o isei range
 model_wo_range <- 'diversitycfa_norange =~ diversityclass+crossclass + isei_sd+know_total'
-fit_range<- lavaan::cfa(model = model_wo_range,data = df_cfa,cluster = "idencuesta",
-                        sampling.weights = "ponderador_long_total"
+fit_range<- lavaan::cfa(model = model_wo_range,data = df_cfa,
+                        # cluster = "idencuesta",
+                        # sampling.weights = "ponderador_long_total"
                         )
 lavaan::summary(fit_range,standardized=T,fit.measures=T)
 
 # Model w/o isei sd
 model_wo_sd <- 'diversitycfa_nosde =~ diversityclass+isei_range+know_total+crossclass'
-fit_sd<- lavaan::cfa(model = model_wo_sd,data = df_cfa,cluster = "idencuesta",sampling.weights = "ponderador_long_total")
+fit_sd<- lavaan::cfa(model = model_wo_sd,data = df_cfa,
+                     # cluster = "idencuesta",
+                     # sampling.weights = "ponderador_long_total"
+                     )
 lavaan::summary(fit_sd,standardized=T,fit.measures=T)
 
 models<- list(fitoriginal,fit_range,fit_sd)

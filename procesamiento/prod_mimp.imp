@@ -1,0 +1,17 @@
+# example 8.2: model-based multiple imputation for a multilevel regression with random intercepts
+DATA: study2.dat;
+VARIABLES: idencuesta ola isei08res m0_edad educ ing_pc sexo; 
+CLUSTERID: idencuesta;
+#ORDINAL: educ;
+MISSING: 999;
+#FIXED: probsolve1 condition;
+FCS: isei08res ola m0_edad educ;
+SEED: 1234;
+#BURN: 1000;
+ITERATIONS: 10000;
+NIMPS: 100; # setting nimps = chains saves one data set at the end of each mcmc chain
+CHAINS: 100;
+SAVE: 
+stacked = imps.dat; # R, SAS, SPSS format
+#stacked0 = ./imps/imps0.dat; # Stata format
+#separate = ./imps/imp*.dat; # Mplus format

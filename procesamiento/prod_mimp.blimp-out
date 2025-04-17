@@ -1,0 +1,964 @@
+
+---------------------------------------------------------------------------
+
+                                   Blimp
+                                  3.2.15
+
+             Blimp was developed with funding from Institute of
+           Education Sciences awards R305D150056 and R305D190002.
+
+            Craig K. Enders, P.I. Email: cenders@psych.ucla.edu
+           Brian T. Keller, Co-P.I. Email: btkeller@missouri.edu
+                 Han Du, Co-P.I. Email: hdu@psych.ucla.edu
+                 Roy Levy, Co-P.I. Email: roy.levy@asu.edu
+
+              Programming and Blimp Studio by Brian T. Keller
+
+                   There is no expressed license given.
+
+---------------------------------------------------------------------------
+
+
+ALGORITHMIC OPTIONS SPECIFIED:
+
+  Imputation method:                 Latent Fully conditional specification
+  MCMC algorithm:                    Gibbs sampler (GIBBS)
+  Between-cluster imputation model:  Latent cluster means (LATENT)
+  Prior for variances:               Unit sum of squares, df = 2 (XPRIOR1)
+  Chain Starting Values:             Random starting values
+
+
+  NOTE: The default prior for regression coefficients 
+        in categorical models is 'normal( 0.0, 5.0)'
+
+  NOTE: The following variables have been renamed
+        to be 9 characters or less.
+
+           idencuesta -> idencuest
+
+
+DATA INFORMATION:
+
+  Level-2 identifier:       idencuest
+  Sample Size:              12141
+  Level-2 Clusters:         4447
+  Missing Data Info:
+                          miss %       1     2     3     4
+                                 --------------------------
+                      ola =  0.0       -     -     -     -  
+                isei08res = 40.8       -     M     M     -  
+                  m0_edad =  0.0       -     -     -     -  
+                     educ =  0.1       -     -     M     M  
+                                 --------------------------
+                                 %  59.2  40.8   0.0   0.0
+
+
+VARIABLES IN IMPUTATION MODEL:
+
+  Complete continuous:    ola m0_edad
+  Incomplete continuous:  isei08res
+  Incomplete ordinal:     educ
+
+  NUMBER OF PARAMETERS
+    Imputation Models:      31
+
+PARAMETER LABELS:
+
+  Printing out PSR for last 0 comparisons:
+
+  NOTE: Split chain PSR is being used. This splits each chain's
+        iterations to create twice as many chains.
+
+  Comparing iterations across 100 chains
+
+                                   
+
+Complete variable:  ola        
+
+ 1  Grand Mean                     
+
+    Level 1:                       
+ 2   isei08res                     
+ 3   m0_edad                       
+ 4   educ                          
+ 5   Residual Var.                 
+
+
+Missing variable:   isei08res  
+
+ 6  Grand Mean                     
+
+    Level 1:                       
+ 7   ola                           
+ 8   m0_edad                       
+ 9   educ                          
+10   Residual Var.                 
+
+    Level 2:                       
+11   m0_edad                       
+12   educ                          
+13   Residual Var.                 
+
+
+Complete variable:  m0_edad    
+
+14  Grand Mean                     
+
+    Level 1:                       
+15   ola                           
+16   isei08res                     
+17   educ                          
+18   Residual Var.                 
+
+    Level 2:                       
+19   isei08res                     
+20   educ                          
+21   Residual Var.                 
+
+
+Missing variable:   educ       
+
+22  Grand Mean                     
+
+    Level 1:                       
+23   ola                           
+24   isei08res                     
+25   m0_edad                       
+26   Residual Var.                 
+
+    Level 2:                       
+27   isei08res                     
+28   m0_edad                       
+29   Residual Var.                 
+
+    Thresholds:                    
+30   Tau 1                         
+31   Tau 2                         
+32   Tau 3                         
+33   Tau 4                         
+
+
+METROPOLIS-HASTINGS ACCEPTANCE RATES:
+
+  Chain 1:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 2:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 3:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 4:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 5:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 6:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 7:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 8:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 9:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 10:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 11:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 12:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 13:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 14:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 15:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 16:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 17:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 18:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 19:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 20:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 21:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 22:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 23:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 24:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 25:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 26:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 27:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 28:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 29:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 30:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 31:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 32:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 33:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 34:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 35:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 36:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 37:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 38:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 39:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 40:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 41:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 42:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 43:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 44:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 45:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 46:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 47:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 48:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 49:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 50:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 51:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 52:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 53:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 54:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 55:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 56:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 57:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 58:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 59:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 60:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 61:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 62:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 63:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 64:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 65:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 66:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 67:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 68:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 69:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 70:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 71:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 72:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 73:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 74:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 75:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 76:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 77:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 78:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 79:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 80:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 81:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 82:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 83:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 84:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 85:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 86:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 87:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 88:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 89:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 90:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 91:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 92:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 93:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 94:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 95:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          1.000          0.350 
+
+
+  Chain 96:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 97:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 98:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 99:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+  Chain 100:
+
+    Variable                            Type    Probability   Target Value 
+    educ                           threshold          0.000          0.350 
+
+
+
+WARNING MESSAGES:
+
+  WARNING: Excluding the following variables as predictors at the listed level.
+           Their latent cluster means will not be estimated at the listed level.
+  
+             Variable "ola" excluded from level-2.
+  
+           These variables are orthogonal to all variables at that level
+           (e.g., because they lack variation at that level).
+
+
+
+ITERATION HISTORY:
+
+  Chain 1 burn-in started on Jan 14 20:00:08 2025
+  Chain 2 burn-in started on Jan 14 20:00:08 2025
+  Chain 3 burn-in started on Jan 14 20:00:08 2025
+  Chain 4 burn-in started on Jan 14 20:00:08 2025
+  Chain 8 burn-in started on Jan 14 20:00:08 2025
+  Chain 6 burn-in started on Jan 14 20:00:08 2025
+  Chain 5 burn-in started on Jan 14 20:00:08 2025
+  Chain 3 had an error on Jan 14 20:00:08 2025
+  Chain 2 had an error on Jan 14 20:00:08 2025
+  Chain 8 had an error on Jan 14 20:00:08 2025
+  Chain 7 burn-in started on Jan 14 20:00:08 2025
+  Chain 5 had an error on Jan 14 20:00:08 2025
+  Chain 4 had an error on Jan 14 20:00:08 2025
+  Chain 7 had an error on Jan 14 20:00:08 2025
+  Chain 6 had an error on Jan 14 20:00:08 2025
+  Chain 1 had an error on Jan 14 20:00:08 2025
+  Chain 9 burn-in started on Jan 14 20:00:08 2025
+  Chain 10 burn-in started on Jan 14 20:00:08 2025
+  Chain 11 burn-in started on Jan 14 20:00:08 2025
+  Chain 10 had an error on Jan 14 20:00:08 2025
+  Chain 12 burn-in started on Jan 14 20:00:08 2025
+  Chain 9 had an error on Jan 14 20:00:08 2025
+  Chain 13 burn-in started on Jan 14 20:00:08 2025
+  Chain 11 had an error on Jan 14 20:00:08 2025
+  Chain 12 had an error on Jan 14 20:00:08 2025
+  Chain 14 burn-in started on Jan 14 20:00:08 2025
+  Chain 13 had an error on Jan 14 20:00:08 2025
+  Chain 14 had an error on Jan 14 20:00:08 2025
+  Chain 16 burn-in started on Jan 14 20:00:08 2025
+  Chain 16 had an error on Jan 14 20:00:08 2025
+  Chain 15 burn-in started on Jan 14 20:00:08 2025
+  Chain 15 had an error on Jan 14 20:00:08 2025
+  Chain 17 burn-in started on Jan 14 20:00:08 2025
+  Chain 18 burn-in started on Jan 14 20:00:08 2025
+  Chain 19 burn-in started on Jan 14 20:00:08 2025
+  Chain 17 had an error on Jan 14 20:00:08 2025
+  Chain 20 burn-in started on Jan 14 20:00:08 2025
+  Chain 18 had an error on Jan 14 20:00:08 2025
+  Chain 21 burn-in started on Jan 14 20:00:08 2025
+  Chain 19 had an error on Jan 14 20:00:08 2025
+  Chain 22 burn-in started on Jan 14 20:00:08 2025
+  Chain 20 had an error on Jan 14 20:00:08 2025
+  Chain 21 had an error on Jan 14 20:00:08 2025
+  Chain 22 had an error on Jan 14 20:00:08 2025
+  Chain 23 burn-in started on Jan 14 20:00:08 2025
+  Chain 24 burn-in started on Jan 14 20:00:08 2025
+  Chain 23 had an error on Jan 14 20:00:08 2025
+  Chain 24 had an error on Jan 14 20:00:08 2025
+  Chain 25 burn-in started on Jan 14 20:00:08 2025
+  Chain 26 burn-in started on Jan 14 20:00:08 2025
+  Chain 27 burn-in started on Jan 14 20:00:08 2025
+  Chain 25 had an error on Jan 14 20:00:08 2025
+  Chain 26 had an error on Jan 14 20:00:08 2025
+  Chain 28 burn-in started on Jan 14 20:00:08 2025
+  Chain 27 had an error on Jan 14 20:00:08 2025
+  Chain 29 burn-in started on Jan 14 20:00:08 2025
+  Chain 31 burn-in started on Jan 14 20:00:08 2025
+  Chain 28 had an error on Jan 14 20:00:08 2025
+  Chain 32 burn-in started on Jan 14 20:00:08 2025
+  Chain 29 had an error on Jan 14 20:00:08 2025
+  Chain 31 had an error on Jan 14 20:00:08 2025
+  Chain 30 burn-in started on Jan 14 20:00:08 2025
+  Chain 32 had an error on Jan 14 20:00:08 2025
+  Chain 30 had an error on Jan 14 20:00:08 2025
+  Chain 33 burn-in started on Jan 14 20:00:08 2025
+  Chain 34 burn-in started on Jan 14 20:00:08 2025
+  Chain 33 had an error on Jan 14 20:00:08 2025
+  Chain 35 burn-in started on Jan 14 20:00:08 2025
+  Chain 34 had an error on Jan 14 20:00:08 2025
+  Chain 36 burn-in started on Jan 14 20:00:08 2025
+  Chain 37 burn-in started on Jan 14 20:00:08 2025
+  Chain 35 had an error on Jan 14 20:00:08 2025
+  Chain 38 burn-in started on Jan 14 20:00:08 2025
+  Chain 36 had an error on Jan 14 20:00:08 2025
+  Chain 37 had an error on Jan 14 20:00:08 2025
+  Chain 39 burn-in started on Jan 14 20:00:08 2025
+  Chain 38 had an error on Jan 14 20:00:08 2025
+  Chain 40 burn-in started on Jan 14 20:00:08 2025
+  Chain 39 had an error on Jan 14 20:00:08 2025
+  Chain 40 had an error on Jan 14 20:00:08 2025
+  Chain 41 burn-in started on Jan 14 20:00:08 2025
+  Chain 42 burn-in started on Jan 14 20:00:08 2025
+  Chain 43 burn-in started on Jan 14 20:00:08 2025
+  Chain 41 had an error on Jan 14 20:00:08 2025
+  Chain 42 had an error on Jan 14 20:00:08 2025
+  Chain 44 burn-in started on Jan 14 20:00:08 2025
+  Chain 43 had an error on Jan 14 20:00:08 2025
+  Chain 47 burn-in started on Jan 14 20:00:08 2025
+  Chain 44 had an error on Jan 14 20:00:08 2025
+  Chain 45 burn-in started on Jan 14 20:00:08 2025
+  Chain 47 had an error on Jan 14 20:00:08 2025
+  Chain 46 burn-in started on Jan 14 20:00:08 2025
+  Chain 45 had an error on Jan 14 20:00:08 2025
+  Chain 48 burn-in started on Jan 14 20:00:08 2025
+  Chain 46 had an error on Jan 14 20:00:08 2025
+  Chain 48 had an error on Jan 14 20:00:08 2025
+  Chain 49 burn-in started on Jan 14 20:00:08 2025
+  Chain 50 burn-in started on Jan 14 20:00:08 2025
+  Chain 49 had an error on Jan 14 20:00:08 2025
+  Chain 51 burn-in started on Jan 14 20:00:08 2025
+  Chain 52 burn-in started on Jan 14 20:00:08 2025
+  Chain 50 had an error on Jan 14 20:00:08 2025
+  Chain 53 burn-in started on Jan 14 20:00:08 2025
+  Chain 51 had an error on Jan 14 20:00:08 2025
+  Chain 52 had an error on Jan 14 20:00:08 2025
+  Chain 54 burn-in started on Jan 14 20:00:08 2025
+  Chain 55 burn-in started on Jan 14 20:00:08 2025
+  Chain 53 had an error on Jan 14 20:00:08 2025
+  Chain 54 had an error on Jan 14 20:00:08 2025
+  Chain 55 had an error on Jan 14 20:00:08 2025
+  Chain 56 burn-in started on Jan 14 20:00:08 2025
+  Chain 56 had an error on Jan 14 20:00:08 2025
+  Chain 57 burn-in started on Jan 14 20:00:08 2025
+  Chain 58 burn-in started on Jan 14 20:00:08 2025
+  Chain 57 had an error on Jan 14 20:00:08 2025
+  Chain 59 burn-in started on Jan 14 20:00:08 2025
+  Chain 58 had an error on Jan 14 20:00:08 2025
+  Chain 61 burn-in started on Jan 14 20:00:08 2025
+  Chain 60 burn-in started on Jan 14 20:00:08 2025
+  Chain 59 had an error on Jan 14 20:00:08 2025
+  Chain 61 had an error on Jan 14 20:00:08 2025
+  Chain 63 burn-in started on Jan 14 20:00:08 2025
+  Chain 60 had an error on Jan 14 20:00:08 2025
+  Chain 62 burn-in started on Jan 14 20:00:08 2025
+  Chain 63 had an error on Jan 14 20:00:08 2025
+  Chain 64 burn-in started on Jan 14 20:00:08 2025
+  Chain 62 had an error on Jan 14 20:00:08 2025
+  Chain 64 had an error on Jan 14 20:00:08 2025
+  Chain 65 burn-in started on Jan 14 20:00:08 2025
+  Chain 66 burn-in started on Jan 14 20:00:08 2025
+  Chain 65 had an error on Jan 14 20:00:08 2025
+  Chain 67 burn-in started on Jan 14 20:00:08 2025
+  Chain 66 had an error on Jan 14 20:00:08 2025
+  Chain 68 burn-in started on Jan 14 20:00:08 2025
+  Chain 67 had an error on Jan 14 20:00:08 2025
+  Chain 71 burn-in started on Jan 14 20:00:08 2025
+  Chain 68 had an error on Jan 14 20:00:08 2025
+  Chain 72 burn-in started on Jan 14 20:00:08 2025
+  Chain 70 burn-in started on Jan 14 20:00:08 2025
+  Chain 71 had an error on Jan 14 20:00:08 2025
+  Chain 69 burn-in started on Jan 14 20:00:08 2025
+  Chain 70 had an error on Jan 14 20:00:08 2025
+  Chain 72 had an error on Jan 14 20:00:08 2025
+  Chain 69 had an error on Jan 14 20:00:08 2025
+  Chain 73 burn-in started on Jan 14 20:00:08 2025
+  Chain 74 burn-in started on Jan 14 20:00:08 2025
+  Chain 75 burn-in started on Jan 14 20:00:08 2025
+  Chain 74 had an error on Jan 14 20:00:08 2025
+  Chain 73 had an error on Jan 14 20:00:08 2025
+  Chain 75 had an error on Jan 14 20:00:08 2025
+  Chain 76 burn-in started on Jan 14 20:00:08 2025
+  Chain 77 burn-in started on Jan 14 20:00:08 2025
+  Chain 78 burn-in started on Jan 14 20:00:08 2025
+  Chain 76 had an error on Jan 14 20:00:08 2025
+  Chain 77 had an error on Jan 14 20:00:08 2025
+  Chain 79 burn-in started on Jan 14 20:00:08 2025
+  Chain 78 had an error on Jan 14 20:00:08 2025
+  Chain 80 burn-in started on Jan 14 20:00:08 2025
+  Chain 79 had an error on Jan 14 20:00:08 2025
+  Chain 80 had an error on Jan 14 20:00:08 2025
+  Chain 81 burn-in started on Jan 14 20:00:08 2025
+  Chain 82 burn-in started on Jan 14 20:00:08 2025
+  Chain 81 had an error on Jan 14 20:00:08 2025
+  Chain 83 burn-in started on Jan 14 20:00:08 2025
+  Chain 82 had an error on Jan 14 20:00:08 2025
+  Chain 84 burn-in started on Jan 14 20:00:08 2025
+  Chain 83 had an error on Jan 14 20:00:08 2025
+  Chain 85 burn-in started on Jan 14 20:00:08 2025
+  Chain 84 had an error on Jan 14 20:00:08 2025
+  Chain 86 burn-in started on Jan 14 20:00:08 2025
+  Chain 85 had an error on Jan 14 20:00:08 2025
+  Chain 87 burn-in started on Jan 14 20:00:08 2025
+  Chain 86 had an error on Jan 14 20:00:08 2025
+  Chain 88 burn-in started on Jan 14 20:00:08 2025
+  Chain 87 had an error on Jan 14 20:00:08 2025
+  Chain 88 had an error on Jan 14 20:00:08 2025
+  Chain 89 burn-in started on Jan 14 20:00:08 2025
+  Chain 90 burn-in started on Jan 14 20:00:08 2025
+  Chain 89 had an error on Jan 14 20:00:08 2025
+  Chain 91 burn-in started on Jan 14 20:00:08 2025
+  Chain 90 had an error on Jan 14 20:00:08 2025
+  Chain 92 burn-in started on Jan 14 20:00:08 2025
+  Chain 91 had an error on Jan 14 20:00:08 2025
+  Chain 93 burn-in started on Jan 14 20:00:08 2025
+  Chain 93 had an error on Jan 14 20:00:08 2025
+  Chain 94 burn-in started on Jan 14 20:00:08 2025
+  Chain 92 had an error on Jan 14 20:00:08 2025
+  Chain 94 had an error on Jan 14 20:00:08 2025
+  Chain 96 burn-in started on Jan 14 20:00:08 2025
+  Chain 95 burn-in started on Jan 14 20:00:08 2025
+  Chain 96 had an error on Jan 14 20:00:08 2025
+  Chain 95 had an error on Jan 14 20:00:08 2025
+  Chain 97 burn-in started on Jan 14 20:00:08 2025
+  Chain 98 burn-in started on Jan 14 20:00:08 2025
+  Chain 97 had an error on Jan 14 20:00:08 2025
+  Chain 99 burn-in started on Jan 14 20:00:08 2025
+  Chain 98 had an error on Jan 14 20:00:08 2025
+  Chain 100 burn-in started on Jan 14 20:00:08 2025
+  Chain 99 had an error on Jan 14 20:00:08 2025
+  Chain 100 had an error on Jan 14 20:00:08 2025
+
+ERROR: The Metropolis-Hastings sampler was unable to tune.
+       The first half of the burn-in iterations are used for tuning.
+       Increase the burn-in iterations and rerun.
+  Acceptance rate diagnostic information:
+  [1] = threshold, 0.000000, 5.800000
+

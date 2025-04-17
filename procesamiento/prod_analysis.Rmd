@@ -28,10 +28,50 @@ ggplot2::theme_set(ggplot2::theme_bw())
 ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
 options(scipen=999)
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(dplyr,ggplot2,haven,ggrepel,gridExtra,panelr)  
+pacman::p_load(dplyr,ggplot2,haven,ggrepel,gridExtra,panelr,sjmisc)  
 rm(list=ls())
 load(here::here("input/data/proc/study2.RData"))
 ```
+
+
+```{r}
+
+table(elsoc_long$c06_01,elsoc_long$ola)
+
+
+elsoc_long %>% 
+  filter(ola==1) %>% 
+  select(c06_01,c06_02,c06_03) %>% 
+  sjPlot::plot_likert(cat.neutral = 3)
+
+elsoc_long %>% 
+  filter(ola==3) %>% 
+  select(c06_01,c06_02,c06_03) %>% 
+  sjPlot::plot_likert(cat.neutral = 3)
+
+elsoc_long %>% 
+  filter(ola==6) %>% 
+  select(c06_01,c06_02,c06_03) %>% 
+  sjPlot::plot_likert(cat.neutral = 3)
+
+elsoc_long %>% filter(ola==3) %>% frq(c06_01,weights = ponderador02)
+elsoc_long %>% filter(ola==3) %>% frq(c06_02,weights = ponderador02)
+elsoc_long %>% filter(ola==3) %>% frq(c06_03,weights = ponderador02)
+
+
+
+elsoc_long$trust_udi<- factor(car::recode(elsoc_long$c06_01,"1=0;2:5=1"))
+elsoc_long$trust_dc <- factor(car::recode(elsoc_long$c06_02,"1=0;2:5=1"))
+elsoc_long$trust_pc <- factor(car::recode(elsoc_long$c06_03,"1=0;2:5=1"))
+
+elsoc_long %>% filter(ola==3) %>% frq(trust_udi,weights = ponderador02)
+elsoc_long %>% filter(ola==3) %>%frq(trust_dc,weights = ponderador02)
+elsoc_long %>% filter(ola==3) %>%frq(trust_pc,weights = ponderador02)
+
+
+
+```
+
 
 ```{r}
 dfreg <-

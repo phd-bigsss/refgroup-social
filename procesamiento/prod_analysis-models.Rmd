@@ -31,7 +31,8 @@ if (!require("pacman")) install.packages("pacman")
 rm(list=ls())
 # load(here::here("input/data/proc/study2.RData"))
 load(here::here("input/data/proc/study2.RData")); elsoc_long<- elsoc_long
-pacman::p_load(correlation,lme4,plm,panelr,texreg,dplyr,estimatr,marginaleffects,ggplot2,sjmisc,MLMusingR,ordinal)  
+pacman::p_load(correlation,lme4,plm,panelr,texreg,dplyr,estimatr,marginaleffects,ggplot2,sjmisc,MLMusingR,ggExtra,sjPlot)  
+
 dfreg <-
 elsoc_long %>%
   group_by(idencuesta) %>%
@@ -88,33 +89,39 @@ dfreg %>%
 
 dfreg$ing_pc_100 <- (dfreg$real_income_eq) # each unit is 100.000 CLP
 # dfreg$ing_pc_100 <- (dfreg$real_income) # each unit is 100.000 CLP
-
 # dfreg$ing_pc_100 <- (dfreg$ing_pc_eq/100000) # each unit is 100.000 CLP
-dfreg$isei3res<- factor(ntile(dfreg$isei08res,4))
-dfreg$isei3res_na <- factor(ifelse(is.na(dfreg$isei3res),yes = 99,no = dfreg$isei3res))
-# dfreg$isei3res_na <- factor(dfreg$isei3res_na,levels = 1:4,labels = c("iseiLow","iseiMid","iseiHigh","iseiResd"))
+dfreg$isei4res <- factor(ntile(dfreg$isei08res,4))
+# dfreg$isei4res_imputed <- factor(ntile(dfreg$isei08res_imputed,4))
+dfreg$isei3 <- factor(ntile(dfreg$isei08res,3))
 
-class_t1 <- dfreg %>% filter(ola ==1) %>% select(idencuesta,ola,class1=isei3res_na)
-class_t2 <- dfreg %>% filter(ola ==3) %>% select(idencuesta,ola,class3=isei3res_na)
+dfreg$isei3 <- factor(ntile(dfreg$isei08res,5))
+dfreg$isei3 <- car::recode(dfreg$isei3,"1=1;2:4=2;5=3")
 
-class_w1w5<- left_join(class_t1,class_t2,by ="idencuesta")
+# dfreg$isei3_imputed <- factor(ntile(dfreg$isei08res_imputed,3))
+# dfreg$isei08res_imputed <- as.numeric(dfreg$isei08res_imputed)
+dfreg$isei3res_na <- factor(ifelse(is.na(dfreg$isei3),yes = 99,no = dfreg$isei3))
 
-# sjPlot::tab_xtab(class_w1w5$class1,class_w1w5$class5)
 frq(as.numeric(dfreg$educ))
 dfreg$univ <- car::recode(as.numeric(dfreg$educ),"5=1;1:4=0")
 dfreg$class8 <- car::recode(as.numeric(dfreg$egp8_r_label_na.x),"1:2='1Service Class';3:4='2Routine nonmanual';5='3Self-employed';6:9='4Working Class';10:11='5Unemployed and Retired'",as.factor = T)
-dfreg$class8 <- relevel(x = dfreg$class8,ref = '4Working Class')
+# dfreg$class8 <- relevel(x = dfreg$class8,ref = '4Working Class')
+
+dfreg$isei_cv <- (dfreg$isei_sd/dfreg$isei_avg)*100;summary(dfreg$isei_cv)
+
+
+(dfreg$isei_tot/dfreg$n_total)
 
 df1 <-  
 dfreg %>%
-  filter(muestra==1) %>%
-  filter(ola %in% c(1,3,5,7)) %>%
-  # filter(m0_edad %in% c(18:65)) %>%
-  # filter(ing_pc>0) %>%
-  select(id="idencuesta",ola,
-         diversityclass=iqvclass,know_total,
-         crossclass,isei_sd,
-         # diversityclass=diversitycfa,
+  filter(ola %in% c(1,3,7)) %>%
+  filter(muestra==1 & idencuesta!=3577497540) %>%
+  select(id="idencuesta",ola,muestra,tipo_atricion,
+         iqvclass,
+         know_total,
+         crossclass,
+         isei_sd,
+         isei_cv,
+         isei_range,
          isei_avg,
          n_total,
          just_educ,
@@ -122,40 +129,41 @@ dfreg %>%
          just_pension,
          market,
          income=real_income_eq,
-         # isei=isei08res,
          isei=isei3res_na,
          # isei=class8,
          educ=univ,
-         empst,
          age=m0_edad,
          sex=sexo_fx,
          weights1=ponderador_long_total,
-         ponderador01,ponderador02
+         ponderador02,
          ) %>%
   mutate(income=log(income)) %>%
-  arrange(ola)
+  arrange(ola) %>% 
+  filter(!is.infinite(income))
 table(df1$ola)
 
-# t7<- df1 %>% filter(ola==7) %>%  select(id)
-# df1 <- df1 %>% filter(id %in% t7$id)  
-df1_atrition <- df1
-df1 <-  df1 %>% filter(!is.infinite(income)) %>% na.omit(df1)
+summary(df1)
 
-# fix to complete cases
-idfreq<- frq(df1$id) %>% data.frame() %>% select(val,frq);filter<- idfreq %>% filter(frq>=2);df1 <- df1 %>% filter(id %in% filter$val)
+# save(df1,file = here::here("input/data/proc/study2_to-impute.RData"))
+
+# df1_atrition <- df1
+df1 <-  df1 %>% filter(!is.infinite(income)) %>% na.omit(df1)
+# # fix to complete cases
+# idfreq<- frq(df1$id) %>% data.frame() %>% select(val,frq);filter<- idfreq %>% filter(frq>=1);df1 <- df1 %>% filter(id %in% filter$val)
 
 dim(df1)
 
 df1$time <- as.numeric(df1$ola)
-df1$time2 <- df1$time*df1$time
 table(df1$time)
-# Model w/o isei range
-model_wo_range <- 'diversitycfa_norange =~ diversityclass+crossclass + isei_sd+know_total'
+# # Model w/o isei range
+model_wo_range <- 'diversitycfa_norange =~ iqvclass+crossclass+isei_cv+know_total'
 fit_range<- lavaan::cfa(model = model_wo_range,data = df1,
                         cluster = "id",
                         sampling.weights = "weights1"
                         )
 lavaan::summary(fit_range,standardized=T,fit.measures=T)
+
+
 # Model using blau, sd, extensivity and number of different "social classes" known (cross-class) is the best
 
 factorscores<- lavaan::lavPredict(fit_range,newdata = df1)
@@ -165,21 +173,380 @@ fscores <- lavaan::lavPredict(fit_range)
 for (fs in colnames(fscores)) {
   df1[idx, fs] <- fscores[ , fs]
 }
-#
-df1 <- df1 %>% rename(diversitycfa=diversitycfa_norange);df1$diversityclass <- df1$diversitycfa
-paneldata <- panelr::panel_data(df1, id = id, wave = time)
-haven::write_dta(data = as.data.frame(paneldata),path = here::here("input/data/proc/study2.dta"))
 
-mean(df1$diversityclass);sd(df1$diversityclass)
+df1 <- df1 %>% rename(diversitycfa=diversitycfa_norange)
+
+# df1$diversityclass <- df1$diversitycfa
+paneldata <- panelr::panel_data(df1, id = id, wave = time)
+mean(df1$diversitycfa);sd(df1$diversitycfa)
+# Diversity index using PCA:
+df_pca<- 
+paneldata %>% 
+  as.data.frame() %>% 
+  select(iqvclass,isei_cv,know_total,crossclass)
+
+pca_fit<- psych::pca(r = df_pca,nfactors = 1,rotate = "varimax",scores = T,weight = paneldata$weights1)
+paneldata$diversityclass <- as.numeric(pca_fit$scores)
+mean(paneldata$diversityclass);sd(paneldata$diversityclass)
+
+# paneldata$diversityclass <- as.numeric(paneldata$diversitycfa)
+# mean(paneldata$diversityclass);sd(paneldata$diversityclass)
+
+
+# save(paneldata,file = here::here("input/data/proc/study2_v3_to-impute.RData"))
+```
+
+
+# Fixed effects regression
+
+```{r main-fe-models}
+library(plm) 
+library(panelr)
+library(estimatr)
+library(ordinal)
+library(ggExtra)
+paneldata137 <- paneldata %>% filter(time %in% c(1,3,7))
+# paneldata137$diversityclass <- as.numeric(scale(paneldata137$diversityclass))
+summary(paneldata137$diversityclass);sd(paneldata137$diversityclass)
+paneldata137$market <- scale(paneldata137$market)
+paneldata137$income <- scale(paneldata137$income) # "those above their historical average"
+paneldata137$educ <- scale(paneldata137$educ) # "those above their historical average"
+paneldata137$isei_avg <- scale(paneldata137$isei_avg) # "those above their historical average"
+paneldata137$n_total <- scale(paneldata137$n_total) # "those above their historical average"
+paneldata137$just_educ <- scale(paneldata137$just_educ)
+paneldata137$just_salud <- scale(paneldata137$just_salud)
+paneldata137$just_pension <- scale(paneldata137$just_pension)
+
+#test tge haussman indica que es mejor usar FE con two-way 
+mkt_educ <- plm(just_educ ~ diversityclass+age+isei+sex,data=paneldata137,weights = weights1,model = "within",effect = "twoway")
+mkt_salu <- plm(just_salud ~ diversityclass+age+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+mkt_pens <- plm(just_pension ~ diversityclass+age+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+services_models_fe <- list(mkt_educ,mkt_salu,mkt_pens)
+screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1))
+
+# Witihin effects
+mkt_just2   <- plm(market ~ isei+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+mkt_just2.1 <- plm(market ~ diversityclass+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+mkt_just2.2 <- plm(market ~ diversityclass+isei+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+n_total+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+mkt_just2.4 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+time+age,data=paneldata137,weights = weights1, model="within",effect = "twoways")
+
+mkt_just2.5_be <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+time+age,data=paneldata137,model="between")
+
+screenreg(mkt_just2.5_be)
+#Note: The interaction between ISEI, Income and Education with diversity not significant
+
+market_models_fe <- list(mkt_just2,mkt_just2.1,mkt_just2.2,mkt_just2.3,mkt_just2.4,mkt_just2.5)
+
+custom.coef.map = list("isei2"="to Middle","isei3"="to High",
+                       "isei99"="Missing",
+                       "diversityclass" = "Network diversity",
+                       "isei_avg"="Network status","n_total"="Network size",
+                       "income" = "HH Income","educ" = "University Degree")
+
+# Hausman test for fixed versus random effects model
+screenreg(market_models_fe)
+htmlreg(
+  market_models_fe,caption.above = T,
+  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  groups = list("ISEI (ref.= from Low)"=1:3),
+  custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
+  ),
+  include.rsquared = F,
+  include.adjrs = F,
+  file = "output/tables/market_fe_main.html",
+  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
+)
+
+int_diversity <- mkt_just2.2
+df_pred1 <- 
+  predictions(int_diversity, condition = c("diversityclass"),
+              newdata = datagrid(diversityclass = seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by= 0.1)))
+
+0.18 - 0.05
+
+
+df_pred2 <- 
+  predictions(int_diversity, condition = c("diversityclass"),
+              newdata = datagrid(diversityclass = c(min(paneldata137$diversityclass), mean(paneldata137$diversityclass),max(paneldata137$diversityclass), 2)))
+
+
+plot_fig1<- 
+df_pred1 %>% 
+ggplot(aes(y =estimate,x=diversityclass,ymin=conf.low, ymax=conf.high,label=round(estimate,2))) +
+  geom_ribbon(alpha=0.1,size=1,linetype="solid",color="black") +
+  geom_line(size=1,color="black") +
+  geom_point(size=2,color="black") +
+scale_y_continuous(limits = c(-0.2,0.5))+
+  labs(caption = paste0("Note: N (observations) = ",nobs(int_diversity), ". Predictive estimates with 95% confidence intervals"),
+       x="Network diversity (z-score)",y="Market justice preferences (z-score)") +
+  # geom_text(hjust=1,vjust=-2)+
+  theme(legend.position = "none", legend.title = element_blank());plot_fig1
+
+ggsave(plot = last_plot(),filename = "figure1.png",
+       path = "output/images",
+       width = 1.5,height = 1,scale = 15,device = "png",units = "cm")
 
 ```
 
-      Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
--0.7054360  0.0136731  0.0638493 -0.0000099  0.0908886  0.1178234 
 
-    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
--0.46948  0.01370  0.04613  0.00296  0.06324  0.08043 
+# Descriptive
 
+```{r}
+lm(market~as.factor(isei),data =dfreg) %>% 
+  plot_predictions(condition = "isei",draw = F) %>% 
+  arrange(isei) %>% 
+  ggplot(aes(y =estimate,x=isei,ymin=conf.low, ymax=conf.high,label=round(estimate,3))) +
+  geom_errorbar(size=0.1,width=0.1,linetype="solid",color="black") +
+  geom_point(size=2,color="black") +
+  geom_text(hjust=1.5)
+
+
+# Estimate Std. Error      z Pr(>|z|)   2.5 %   97.5 % isei  age weights1          diversityclass
+#    0.1853     0.0737  2.514   0.0120  0.0408  0.32971   99 48.6     1.03 -3.89909495704324537968
+#   -0.0135     0.0251 -0.539   0.5901 -0.0628  0.03572   99 48.6     1.03  0.00000000000000000908
+#   -0.0576     0.0306 -1.880   0.0602 -0.1177  0.00247   99 48.6     1.03  0.86408287825480933897
+#   -0.1155     0.0458 -2.521   0.0117 -0.2053 -0.02570   99 48.6     1.03  2.00000000000000000000
+
+
+#   rowid    estimate  std.error  statistic     p.value     conf.low   conf.high isei
+# 1     2 -0.08141387 0.02722484 -2.9904263 0.002785884 -0.134773578 -0.02805417    1
+# 2     3  0.01920910 0.02903844  0.6615061 0.508287802 -0.037705190  0.07612340    2
+# 3     4  0.05216558 0.02889239  1.8055126 0.070994509 -0.004462471  0.10879363    3
+# 4     1  0.01025967 0.02043428  0.5020814 0.615610294 -0.029790781  0.05031012   99
+```
+
+
+
+
+
+```{r main-fe-imputed}
+library(plm) 
+library(panelr)
+library(estimatr)
+library(ordinal)
+# load(here::here("input/data/proc/study2_imputed.RData"))
+load(here::here("input/data/proc/study2_v3_imputed.RData"))
+paneldata<- df1_imputed
+paneldata <- paneldata %>% filter(ola %in% c(1,3,7))
+paneldata$time <- paneldata$ola
+paneldata$diversityclass <- scale(paneldata$diversityclass)
+# paneldata$isei <- factor(ntile(paneldata$isei,3))
+paneldata$market <- scale(paneldata$market)
+paneldata$income <- scale(paneldata$income) # "those above their historical average"
+paneldata$educ <- scale(paneldata$educ) # "those above their historical average"
+paneldata$diversityclass <- scale(paneldata$diversityclass)
+paneldata$isei_avg <- scale(paneldata$isei_avg) # "those above their historical average"
+paneldata$n_total <- scale(paneldata$n_total) # "those above their historical average"
+paneldata$just_educ <- scale(paneldata$just_educ)
+paneldata$just_salud <- scale(paneldata$just_salud)
+paneldata$just_pension <- scale(paneldata$just_pension)
+
+#test tge haussman indica que es mejor usar FE con two-way 
+mkt_educ <- plm(just_educ ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1,model = "within",effect = "twoway")
+mkt_salu <- plm(just_salud ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
+mkt_pens <- plm(just_pension ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
+services_models_fe <- list(mkt_educ,mkt_salu,mkt_pens)
+screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1))
+# Between-effects  (using predictor grand mean)
+mkt_just1_ols <- plm(market ~ isei+diversityclass+sex+age,data=paneldata,model = "between")
+screenreg(mkt_just1_ols)
+
+
+# Witihin effects
+mkt_just2   <- plm(market ~ isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.1 <- plm(market ~ diversityclass+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.2 <- plm(market ~ diversityclass+isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.4 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+
+# The interaction between ISEI, Income and Education with diversity not significant
+market_models_fe <- list(mkt_just2,mkt_just2.1,mkt_just2.2,mkt_just2.3,mkt_just2.4,mkt_just2.5)
+
+
+custom.coef.map = list("isei2"="to Middle","isei3"="to High",
+                       "isei99"="Missing",
+                       "diversityclass" = "Network diversity",
+                       "isei_avg"="Network status","n_total"="Network size",
+                       "income" = "HH Income","educ" = "University Degree")
+
+
+
+# Hausman test for fixed versus random effects model
+screenreg(market_models_fe)
+htmlreg(
+  market_models_fe,caption.above = T,
+  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  groups = list("ISEI (ref.= from Low)"=1:2),
+  custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
+  ),
+  include.rsquared = F,
+  include.adjrs = F,  
+  file = "output/tables/market_fe_main_imputed1.html",
+  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
+)
+```
+
+```{r robust-fe-models}
+library(plm) 
+library(panelr)
+library(estimatr)
+library(ordinal)
+# paneldata <- panelr::panel_data(df1, id = id, wave = time)
+# paneldata <- paneldata %>% filter(time %in% c(1,3,7))
+# paneldata$isei <- as.numeric(paneldata$isei)
+
+paneldata$market <- scale(paneldata$market)
+paneldata$income <- scale(paneldata$income) # "those above their historical average"
+paneldata$educ <- scale(paneldata$educ) # "those above their historical average"
+paneldata$diversityclass <- scale(paneldata$diversityclass)
+paneldata$isei_avg <- scale(paneldata$isei_avg) # "those above their historical average"
+paneldata$n_total <- scale(paneldata$n_total) # "those above their historical average"
+paneldata$just_educ <- scale(paneldata$just_educ)
+paneldata$just_salud <- scale(paneldata$just_salud)
+paneldata$just_pension <- scale(paneldata$just_pension)
+# paneldata$isei <- scale(paneldata$isei) # "those above their historical average"
+# paneldata_BE <- 
+# paneldata %>% 
+#   as.data.frame() %>% 
+#   mutate(
+#     diversity=MLMusingR::group_mean(x = as.numeric(diversityclass),grp = id),
+#     age=MLMusingR::group_mean(x = as.numeric(age),grp = id),
+#     income=MLMusingR::group_mean(x = as.numeric(income),grp = id),
+#     educ=MLMusingR::group_mean(x = as.numeric(educ),grp = id),
+#     isei=MLMusingR::group_mean(x = as.numeric(isei),grp = id),    
+#     )
+
+#test tge haussman indica que es mejor usar FE con two-way 
+mkt_educ <- plm(just_educ ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1,model = "within",effect = "twoway")
+mkt_salu <- plm(just_salud ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
+mkt_pens <- plm(just_pension ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
+services_models_fe <- list(mkt_educ,mkt_salu,mkt_pens)
+screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1))
+# Between-effects  (using predictor grand mean)
+mkt_just1_ols <- plm(market ~ isei+diversityclass+sex+age,data=paneldata,model = "between")
+screenreg(mkt_just1_ols)
+
+
+# Witihin effects
+mkt_just2   <- plm(market ~ isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.1 <- plm(market ~ diversityclass+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.2 <- plm(market ~ diversityclass+isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.4 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+
+mkt_just2.6 <- plm(market ~ diversityclass*n_total+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+summary(mkt_just2.6)
+
+# The interaction between ISEI, Income and Education with diversity not significant
+market_models_fe <- list(mkt_just2,mkt_just2.1,mkt_just2.2,mkt_just2.3,mkt_just2.4,mkt_just2.5)
+
+
+custom.coef.map = list("isei2"="to Middle","isei3"="to High",
+                       "isei99"="Missing",
+                       "diversityclass" = "Network diversity",
+                       "isei_avg"="Network status","n_total"="Network size",
+                       "income" = "HH Income","educ" = "University Degree")
+
+# Hausman test for fixed versus random effects model
+screenreg(
+  market_models_fe,caption.above = T,
+  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  # groups = list("ISEI (ref.= from Low)"=1:3),
+  # custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
+  ),
+  include.rsquared = F,
+  include.adjrs = F,
+  # file = "output/tables/market_fe_robust1.html",
+  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
+)
+```
+
+```{r robust-fe-imputed}
+library(plm) 
+library(panelr)
+library(estimatr)
+library(ordinal)
+load(here::here("input/data/proc/study2_v2_imputed.RData"))
+paneldata<- df1_imputed
+paneldata <- paneldata %>% filter(ola %in% c(1,3,7))
+paneldata$isei <- factor(ntile(paneldata$isei,3))
+
+paneldata$market <- scale(paneldata$market)
+paneldata$income <- scale(paneldata$income) # "those above their historical average"
+paneldata$educ <- scale(paneldata$educ) # "those above their historical average"
+paneldata$diversityclass <- scale(paneldata$diversityclass)
+paneldata$isei_avg <- scale(paneldata$isei_avg) # "those above their historical average"
+paneldata$n_total <- scale(paneldata$n_total) # "those above their historical average"
+paneldata$just_educ <- scale(paneldata$just_educ)
+paneldata$just_salud <- scale(paneldata$just_salud)
+paneldata$just_pension <- scale(paneldata$just_pension)
+
+# Between-effects  (using predictor grand mean)
+mkt_just1_ols <- plm(market ~ isei+diversityclass+sex+age,data=paneldata,model = "between")
+screenreg(mkt_just1_ols)
+
+# Witihin effects
+mkt_just2   <- plm(market ~ isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.1 <- plm(market ~ diversityclass+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.2 <- plm(market ~ diversityclass+isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.4 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+
+mkt_just2.6 <- plm(market ~ diversityclass*n_total+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
+summary(mkt_just2.6)
+
+# The interaction between ISEI, Income and Education with diversity not significant
+market_models_fe <- list(mkt_just2,mkt_just2.1,mkt_just2.2,mkt_just2.3,mkt_just2.4,mkt_just2.5)
+
+
+custom.coef.map = list("isei2"="to Middle","isei3"="to High",
+                       "isei99"="Missing",
+                       "diversityclass" = "Network diversity",
+                       "isei_avg"="Network status","n_total"="Network size",
+                       "income" = "HH Income","educ" = "University Degree")
+
+# Hausman test for fixed versus random effects model
+htmlreg(
+  market_models_fe,caption.above = T,
+  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  groups = list("ISEI (ref.= from Low)"=1:2),
+  custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
+  ),
+  file = "output/tables/market_fe_robust1-imputed1.html",
+  include.rsquared = F,
+  include.adjrs = F,    
+  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
+)
+```
 
 
 ```{r}
@@ -216,7 +583,7 @@ rownames(tab_att) <- c("1. Full sample","2. Analytical sample","Missing (%)")
 tab_att %>% 
   kable(digits = 2,format.args=list(decimal.mark = ',', big.mark = "."),
         col.names = c("Time 1","Time 2","Time 3","Time 4","Total"),row.names=T,caption = "Table X: Summary of the original sample.") %>% 
-  kable_styling(full_width = F) 
+  kable_classic_2(full_width = F) 
 
 # Attrition 
 
@@ -273,173 +640,6 @@ ggplot(df1, aes(x = diversityclass, fill = factor(time))) +
   theme_minimal() +  # Use a minimal theme
   theme(legend.title = element_blank())  # Remove legend title
 
-```
-
-# Fixed effects regression
-
-```{r main-fe}
-library(plm) 
-library(panelr)
-library(estimatr)
-library(ordinal)
-# paneldata <- panelr::panel_data(df1, id = id, wave = time)
-# paneldata <- paneldata %>% filter(time %in% c(1,3,5))
-
-paneldata$market <- scale(paneldata$market)
-paneldata$income <- scale(paneldata$income) # "those above their historical average"
-paneldata$educ <- scale(paneldata$educ) # "those above their historical average"
-paneldata$isei_avg <- scale(paneldata$isei_avg) # "those above their historical average"
-paneldata$n_total <- scale(paneldata$n_total) # "those above their historical average"
-paneldata$just_educ <- scale(paneldata$just_educ)
-paneldata$just_salud <- scale(paneldata$just_salud)
-paneldata$just_pension <- scale(paneldata$just_pension)
-# paneldata$isei <- scale(paneldata$isei) # "those above their historical average"
-# paneldata_BE <- 
-# paneldata %>% 
-#   as.data.frame() %>% 
-#   mutate(
-#     diversity=MLMusingR::group_mean(x = as.numeric(diversityclass),grp = id),
-#     age=MLMusingR::group_mean(x = as.numeric(age),grp = id),
-#     income=MLMusingR::group_mean(x = as.numeric(income),grp = id),
-#     educ=MLMusingR::group_mean(x = as.numeric(educ),grp = id),
-#     isei=MLMusingR::group_mean(x = as.numeric(isei),grp = id),    
-#     )
-
-#test tge haussman indica que es mejor usar FE con two-way 
-mkt_educ <- plm(just_educ ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1,model = "within",effect = "twoway")
-mkt_salu <- plm(just_salud ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
-mkt_pens <- plm(just_pension ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoway")
-services_models_fe <- list(mkt_educ,mkt_salu,mkt_pens)
-screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1))
-# Between-effects  (using predictor grand mean)
-mkt_just1_ols <- plm(market ~ isei+diversityclass+sex+age,data=paneldata,model = "between")
-screenreg(mkt_just1_ols)
-
-
-# Witihin effects
-mkt_just2   <- plm(market ~ isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.1 <- plm(market ~ diversityclass+isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.2 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.4 <- plm(market ~ diversityclass+isei+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-
-# The interaction between ISEI, Income and Education with diversity not significant
-market_models_fe <- list(
-  # mkt_just1_ols,
-  # mkt_just2.0,
-  mkt_just2,mkt_just2.1,mkt_just2.3,mkt_just2.4,mkt_just2.2,mkt_just2.5
-  )
-
-custom.coef.map = list("isei2"="Mid-low","isei3"="Mid-high",
-                       "isei4"="High",
-                       "isei99"="Missing",
-                       "diversityclass" = "Network diversity",
-                       "isei_avg"="Network status","n_total"="Network size",
-                       "income" = "HH Income","educ" = "University Degree")
-
-# Hausman test for fixed versus random effects model
-screenreg(
-  market_models_fe,caption.above = T,
-  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
-  stars = c(0.001, 0.01, 0.05, 0.1),
-  groups = list("ISEI (ref.= Low)"=1:4),
-  custom.coef.map = custom.coef.map,
-  include.ci = FALSE,
-  omit.coef = "(Intercept)|(time)",
-  custom.gof.rows =  list(
-    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
-    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
-  ),
-  # file = "output/tables/market_fe.html",
-  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
-)
-```
-
-```{r main-w-out3}
-library(plm) 
-library(panelr)
-library(estimatr)
-library(ordinal)
-# paneldata <- panelr::panel_data(df1, id = id, wave = time)
-paneldata <- paneldata %>% filter(time %in% c(1,3,7))
-
-paneldata$market <- scale(paneldata$market)
-paneldata$income <- scale(paneldata$income) # "those above their historical average"
-paneldata$educ <- scale(paneldata$educ) # "those above their historical average"
-paneldata$isei_avg <- scale(paneldata$isei_avg) # "those above their historical average"
-paneldata$n_total <- scale(paneldata$n_total) # "those above their historical average"
-paneldata$just_educ <- scale(paneldata$just_educ)
-paneldata$just_salud <- scale(paneldata$just_salud)
-paneldata$just_pension <- scale(paneldata$just_pension)
-# paneldata$isei <- scale(paneldata$isei) # "those above their historical average"
-# paneldata_BE <- 
-# paneldata %>% 
-#   as.data.frame() %>% 
-#   mutate(
-#     diversity=MLMusingR::group_mean(x = as.numeric(diversityclass),grp = id),
-#     age=MLMusingR::group_mean(x = as.numeric(age),grp = id),
-#     income=MLMusingR::group_mean(x = as.numeric(income),grp = id),
-#     educ=MLMusingR::group_mean(x = as.numeric(educ),grp = id),
-#     isei=MLMusingR::group_mean(x = as.numeric(isei),grp = id),    
-#     )
-
-#test tge haussman indica que es mejor usar FE con two-way 
-mkt_educ <- plm(just_educ ~ diversityclass+age+isei+sex,data=paneldata,weights = weights1,model = "within",effect = "twoway")
-mkt_salu <- plm(just_salud ~ diversityclass+age+isei+sex,data=paneldata,weights = weights1, model="within",effect = "twoway")
-mkt_pens <- plm(just_pension ~ diversityclass+age+isei+sex,data=paneldata,weights = weights1, model="within",effect = "twoway")
-services_models_fe <- list(mkt_educ,mkt_salu,mkt_pens)
-screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1))
-# Between-effects  (using predictor grand mean)
-
-# mkt_just1_w1<- lm(market ~ diversityclass+age+isei,data=paneldata,subset = time==1,weights = ponderador02)
-mkt_just1_ols <- lm_robust(market ~ diversityclass+age+isei+sex+income+educ+isei_avg+n_total,data=paneldata,
-                           fixed_effects = ~ id,
-                          clusters = id,
-                          se_type = "CR0",
-                          weights = NULL)
-
-# mkt_just1_ols <- plm(market ~ diversityclass+age+isei+sex,data=paneldata,model = "between")
-# mkt_just2.0 <- plm(market~diversityclass+age+isei ,data=paneldata,weights = weights1, model="random")
-
-# Witihin effects
-mkt_just2   <- plm(market ~ isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.1 <- plm(market ~ diversityclass+isei+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.2 <- plm(market ~ diversityclass+isei+income+educ+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.3 <- plm(market ~ diversityclass+isei+isei_avg+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.4 <- plm(market ~ diversityclass+isei+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-mkt_just2.5 <- plm(market ~ diversityclass+isei+income+educ+isei_avg+n_total+age,data=paneldata,weights = weights1, model="within",effect = "twoways")
-
-# The interaction between ISEI, Income and Education with diversity not significant
-market_models_fe <- list(
-  # mkt_just1_ols,
-  # mkt_just2.0,
-  mkt_just2,mkt_just2.1,mkt_just2.3,mkt_just2.4,mkt_just2.2,mkt_just2.5
-  )
-
-custom.coef.map = list("isei2"="Mid-low","isei3"="Mid-high",
-                       "isei4"="High",
-                       "isei99"="Missing",
-                       "diversityclass" = "Network diversity",
-                       "isei_avg"="Network status","n_total"="Network size",
-                       "income" = "HH Income","educ" = "University Degree")
-
-# Hausman test for fixed versus random effects model
-screenreg(
-  market_models_fe,caption.above = T,
-  caption = "Table X: Fixed effects regression for market justice preferences and network diversity",
-  stars = c(0.001, 0.01, 0.05, 0.1),
-  groups = list("ISEI (ref.= Low)"=1:4),
-  custom.coef.map = custom.coef.map,
-  include.ci = FALSE,
-  omit.coef = "(Intercept)|(time)",
-  custom.gof.rows =  list(
-    "Unit FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
-    "Time FE" = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
-  ),
-  # file = "output/tables/market_fe_woutt3.html",
-  custom.note = "%stars; Standard errors in parentheses. Standardized coefficients. Models include age as control."
-)
 ```
 
 

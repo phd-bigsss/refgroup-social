@@ -15,6 +15,128 @@ editor_options:
 
 # Setup
 
+```{r}
+set1 <-  RColorBrewer::brewer.pal(n = 8, name = "Set1")
+options(ggplot2.discrete.fill = set1)
+options(ggplot2.discrete.colour = set1)
+ggplot2::theme_set(ggplot2::theme_bw())
+ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
+options(scipen=999)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(dplyr,ggplot2,haven,ggrepel,gridExtra,panelr,sjmisc,sjlabelled)  
+rm(list=ls())
+
+
+issp2019<- haven::read_dta(here::here(here::here("input/data/original/ZA7600_v3-0-0.dta")))
+
+issp2019$mjsalud<- sjmisc::rec(drop_labels(car::recode(issp2019$v30,"c(-9,-8)=NA"),drop.na = T),rec = "rev")
+
+issp2019$mjeduca<- sjmisc::rec(drop_labels(car::recode(issp2019$v31,"c(-9,-8)=NA"),drop.na = T),rec = "rev")
+
+frq(issp2019$mjsalud)
+frq(issp2019$mjeduca)
+
+issp2019$mjsalud1 <- as.numeric(car::recode(issp2019$mjsalud,"c(5,4)=1;c(3,2,1)=0"))
+issp2019$mjeduc1 <- as.numeric(car::recode(issp2019$mjeduca,"c(5,4)=1;c(3,2,1)=0"))
+
+issp2019$WEIGHT
+
+frq(issp2019$mjsalud1)
+
+
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Aggregate data and flag CL
+issp_country <- issp2019 %>%
+  group_by(c_alphan) %>%
+  summarise(
+    mj_health = weighted.mean(mjsalud1, na.rm = TRUE,WEIGHT),
+    mj_educ = weighted.mean(mjeduc1, na.rm = TRUE,WEIGHT)
+  ) %>%
+  mutate(highlight = ifelse(c_alphan == "CL", "Chile", "Other"))
+
+# Step 2: Compute correlation
+cor_val <- cor(issp_country$mj_educ, issp_country$mj_health, use = "complete.obs")
+
+# Step 3: Plot
+ggplot(issp_country, aes(x = mj_educ, y = mj_health, label = c_alphan)) +
+  geom_point(aes(color = highlight), size = 3) +
+  geom_text(vjust = -0.5, size = 3.2, aes(color = highlight)) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", color = "gray40") +
+  geom_vline(xintercept = mean(issp_country$mj_educ, na.rm = TRUE), linetype = "dotted", color = "darkgray") +
+  geom_hline(yintercept = mean(issp_country$mj_health, na.rm = TRUE), linetype = "dotted", color = "darkgray") +
+  scale_color_manual(values = c("Chile" = "firebrick", "Other" = "steelblue")) +
+  labs(
+    title = "Market Justice Preferences in Health and Education (% of support)",
+    subtitle = "Country-level averages (Chile highlighted)",
+    x = "Mean Market Justice in Education",
+    y = "Mean Market Justice in Health",
+    caption = paste0("Pearson correlation (country-level): r = ", round(cor_val, 3)),
+    color = NULL
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(forcats)
+
+# Step 1: Country-level means
+issp_country <- issp2019 %>%
+  group_by(c_alphan) %>%
+  summarise(
+    mj_health = weighted.mean(mjsalud1, na.rm = TRUE,WEIGHT),
+    mj_educ = weighted.mean(mjeduc1, na.rm = TRUE,WEIGHT)
+  ) %>%
+  mutate(highlight = ifelse(c_alphan == "CL", "Chile", "Other"))
+
+# Step 2: Add sample mean as a pseudo-country
+avg_row <- issp_country %>%
+  summarise(
+    c_alphan = "Average",
+    mj_health = mean(mj_health, na.rm = TRUE),
+    mj_educ = mean(mj_educ, na.rm = TRUE),
+    highlight = "Sample Mean"
+  )
+
+# Step 3: Combine real countries + average
+issp_combined <- bind_rows(issp_country, avg_row)
+
+# Step 4: Reshape for plotting
+issp_long <- issp_combined %>%
+  pivot_longer(cols = c(mj_educ, mj_health), names_to = "domain", values_to = "mean_value") %>%
+  mutate(
+    domain = recode(domain,
+      "mj_educ" = "Market Justice in Education",
+      "mj_health" = "Market Justice in Health"
+    ),
+    c_alphan = fct_reorder(c_alphan, mean_value)
+  )
+
+# Step 5: Plot with labels and sample mean bar
+ggplot(issp_long, aes(x = c_alphan, y = mean_value, fill = highlight)) +
+  geom_col() +
+  geom_text(aes(label = round(mean_value, 2)), hjust = -0.1, size = 3) +
+  facet_wrap(~ domain, scales = "free_y") +
+  scale_fill_manual(values = c("Chile" = "firebrick", "Other" = "gray70", "Sample Mean" = "black")) +
+  labs(
+    title = "Country-Level Market Justice Preferences (% of Support)",
+    x = "Country",
+    y = "Mean Score",
+    fill = NULL
+  ) +
+  coord_flip() +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+
+```
+
+
 ```{r setup}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 options(scipen=9999) # desactivar notacion cientifica

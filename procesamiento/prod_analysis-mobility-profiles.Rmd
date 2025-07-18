@@ -69,18 +69,84 @@ dfreg$class8 <- relevel(x = dfreg$class8,ref = '4Working Class')
 
 dfreg$isei_cv <- (dfreg$isei_sd/dfreg$isei_avg)*100
 
-summary(dfreg$isei_cv)
+# Compute weighted mean, variance, and SD of ISEI for each respondent
+dfreg <- dfreg %>%
+  rowwise() %>%  # Operate row-by-row
+  mutate(
+    # Step 1: Total number of known people (sum of all n_* variables)
+    total_n = sum(
+      n_doctor, n_ceo, n_lawyer, n_univprof, n_account, n_secret,
+      n_shopassi, n_kinder, n_waiter, n_carmech, n_taxi, n_stvend, n_cleaner,
+      na.rm = TRUE  # Ignore NAs when summing
+    ),
+
+    # Step 2: Weighted mean of ISEI (sum(isei * n) / total_n)
+    mean_isei = sum(
+      isei_doctor   * n_doctor,
+      isei_ceo      * n_ceo,
+      isei_lawyer   * n_lawyer,
+      isei_univprof * n_univprof,
+      isei_account  * n_account,
+      isei_secret   * n_secret,
+      isei_shopassi * n_shopassi,
+      isei_kinder   * n_kinder,
+      isei_waiter   * n_waiter,
+      isei_carmech  * n_carmech,
+      isei_taxi     * n_taxi,
+      isei_stvend   * n_stvend,
+      isei_cleaner  * n_cleaner,
+      na.rm = TRUE
+    ) / total_n,
+
+    # Step 3: Weighted variance: sum(w * (x - mean)^2) / total_n
+    var_isei = sum(
+      n_doctor   * (isei_doctor   - mean_isei)^2,
+      n_ceo      * (isei_ceo      - mean_isei)^2,
+      n_lawyer   * (isei_lawyer   - mean_isei)^2,
+      n_univprof * (isei_univprof - mean_isei)^2,
+      n_account  * (isei_account  - mean_isei)^2,
+      n_secret   * (isei_secret   - mean_isei)^2,
+      n_shopassi * (isei_shopassi - mean_isei)^2,
+      n_kinder   * (isei_kinder   - mean_isei)^2,
+      n_waiter   * (isei_waiter   - mean_isei)^2,
+      n_carmech  * (isei_carmech  - mean_isei)^2,
+      n_taxi     * (isei_taxi     - mean_isei)^2,
+      n_stvend   * (isei_stvend   - mean_isei)^2,
+      n_cleaner  * (isei_cleaner  - mean_isei)^2,
+      na.rm = TRUE
+    ) / total_n,
+
+    # Step 4: Standard deviation = square root of variance
+    sd_isei = sqrt(var_isei)
+  ) %>%
+  ungroup()
 
 
 
 dfreg$isei_avg_grp <- car::recode(dfreg$isei_avg,"16:34=1;34.01:54=2;54.01:88=3")
 frq(dfreg$isei_avg_grp)
 
+dfreg$isei_avg_grp <- ntile(dfreg$isei_avg,3)
+frq(dfreg$isei_avg_grp)
+dfreg$isei_avg_grp <- ntile(dfreg$mean_isei,3)
+
+dfreg %>% 
+  group_by(isei_avg_grp) %>% 
+  summarise(mean(mean_isei),min(mean_isei),max(mean_isei))
+
 df1_long <-
 dfreg %>%
 # filter(muestra==1) %>%
 select(idencuesta,ola,muestra,isei_avg,isei_avg_grp,porc_low,porc_middle,porc_high)
 
+
+df1_long %>% group_by(isei_avg_grp) %>% summarise(mean(isei_avg),min(isei_avg),max(isei_avg))
+
+table(df1_long$ola,df1_long$isei_avg_grp)
+
+panel1<-panel_data(df1_long, id = idencuesta, wave = ola) %>% 
+  filter(ola %in% c(1,3,5,7)) %>% 
+  widen_panel(, separator = "_")
 
 df1_long <- df1_long %>%
   mutate(category = case_when(
@@ -140,7 +206,7 @@ dfreg$idencuesta
 
 dfreg <- left_join(dfreg,y = df_wide,by="idencuesta")
 
-
+dfreg$perineq
 
 market_mobility<- lmer(market~nw_mobility + (1|idencuesta),data = dfreg)
 

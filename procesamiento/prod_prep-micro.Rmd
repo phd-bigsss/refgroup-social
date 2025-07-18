@@ -31,7 +31,7 @@ options(scipen=9999) # desactivar notacion cientifica
 remove(list = ls()) # clean workspace
 if (!require("pacman")) install.packages("pacman") # install pacman
 install.packages("devtools")
-devtools::install_git("https://code.europa.eu/digclass/digclass.git",force = TRUE)
+# devtools::install_git("https://code.europa.eu/digclass/digclass.git",force = TRUE)
 
 pacman::p_load(dplyr,readxl,sjmisc, sjlabelled, questionr, car,here,ggplot2,DIGCLASS,spatstat)# load libraries
 # load(here::here("input/data/original/ELSOC_Long_2016_2022_v1.00.RData"))
@@ -1281,7 +1281,6 @@ summary(elsoc_long_2016_2022.2$num_high)
 summary(elsoc_long_2016_2022.2$num_middle)
 summary(elsoc_long_2016_2022.2$num_low)
 
-
 elsoc_long_2016_2022.2$know_low <- car::recode(elsoc_long_2016_2022.2$num_low,recodes = "0=0;else=1")
 elsoc_long_2016_2022.2$know_mid <- car::recode(elsoc_long_2016_2022.2$num_middle,recodes = "0=0;else=1")
 elsoc_long_2016_2022.2$know_hig <- car::recode(elsoc_long_2016_2022.2$num_high,recodes = "0=0;else=1")
@@ -1797,182 +1796,4 @@ elsoc_long[,c("diversitypca",
 save(elsoc_long,file = here::here("input/data/proc/study2.RData"))
 # sjPlot::view_df(elsoc_long,file = here::here("input/data/proc/study2-codebook.html"),show.frq = T)
 ```
-
-
-
-```{r just-class-status, eval=FALSE, include=FALSE}
-bind_rows(
-elsoc_long %>%
-  filter(ola==1) %>% 
-  group_by(egp8_hh_label_na) %>% 
-  summarise(perc=weighted.mean(just_educ,na.rm = T,w=ponderador01),Status="1. Education"),
-elsoc_long %>%
-  filter(ola==1) %>%   
-  group_by(egp8_hh_label_na) %>% 
-  summarise(perc=weighted.mean(just_salud,na.rm = T,w=ponderador01),Status="2. Health"),
-elsoc_long %>%
-  filter(ola==1) %>%   
-  group_by(egp8_hh_label_na) %>% 
-  summarise(perc=weighted.mean(just_pension,na.rm = T,w=ponderador01),Status="3. Pensions")
-) %>% 
-  na.omit() %>% 
-  ggplot(aes(x=factor(egp8_hh_label_na),y = perc, group=Status, color=Status)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(1,5)) +
-  # scale_x_discrete(labels=c("2016","2018","2021")) +
-  labs(title = "Market-based distribution of social services by Class (Wave 1)",x="Class",y=NULL) +
-  theme()
-```
-
-```{r eval=FALSE, include=FALSE}
-bind_rows(
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(isei_avg=mean(isei_avg,na.rm = T),
-         field="Network average ISEI"),
-) %>% na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = isei_avg, group=field, color=field,label=round(isei_avg,2))) +
-  geom_point()+
-  geom_line() +
-  geom_label()+
-  scale_y_continuous(limits = c(16,88)) +
-  scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network average ISEI by year",x="Year",y=NULL)
-
-elsoc_long_2016_2022.2 %>% 
-  ggplot(aes(x=factor(ola),y = isei_avg)) +
-  geom_boxplot() +
-  scale_y_continuous(limits = c(0,100)) +
-  scale_x_discrete(labels=c("2016","2017","2018","2019","2021","2022")) +
-  labs(title = "Network average ISEI by year",x="Year",y=NULL)
-
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(n_total=mean(n_total,na.rm = T),
-         field="Total number of contacts") %>%
-  filter(n_total>0) %>% 
-  na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = n_total, group=field,label=round(n_total,2))) +
-  geom_point()+
-  geom_line() +
-  geom_label()+
-  scale_y_continuous(limits = c(0,221)) +
-  scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network total contacts by year",x="Year",y=NULL)
-
-elsoc_long_2016_2022.2 %>% 
-  ggplot(aes(x=factor(ola),y = n_total)) +
-  geom_boxplot() +
-  # scale_y_continuous(limits = c(0,100)) +
-  scale_x_discrete(labels=c("2016","2017","2018","2019","2021","2022")) +
-  labs(title = "Network total contacts by year",x="Year",y=NULL)
-
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(isei_range=mean(isei_range,na.rm = T),field="Network ISEI range") %>% 
-    na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = isei_range, group=field, color=field)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(0,72)) +
-  scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network ISEI range by year",x="Year",y=NULL)
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(diversity=mean(diversity,na.rm = T),field="Network ISEI range") %>% 
-    na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = diversity, group=field, color=field)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network diversity (occupations) by year",x="Year",y=NULL)
-
-
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(diversityclass=mean(diversityclass,na.rm = T),field="Network diversity") %>% 
-    na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = diversityclass, group=field, color=field)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network diversity (status groups) by year",x="Year",y=NULL)
-
-elsoc_long_2016_2022.2 %>%
-  filter(ola==1) %>%
-  group_by(egp8_r_label) %>% 
-  summarise(diversityclass=weighted.mean(diversityclass,na.rm = T,w=NULL),field="Network diversity") %>% 
-    na.omit() %>% 
-  ggplot(aes(x=factor(egp8_r_label),y = diversityclass, group=field, color=field)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(0.5,1)) +
-  # scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network diversity (status groups) by Class (Wave 1)",x="Year",y=NULL)
-
-
-elsoc_long_2016_2022.2 %>%
-  filter(ola==1) %>%
-  group_by(egp8_r_label) %>% 
-  summarise(diversity=weighted.mean(diversity,na.rm = T,w=ponderador_long_total),field="Network diversity") %>% 
-    na.omit() %>% 
-  ggplot(aes(x=factor(egp8_r_label),y = diversity, group=field, color=field)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(0.5,1)) +
-  # scale_x_discrete(labels=c("2016","2017","2021")) +
-  labs(title = "Network diversity (occupations) by Class (Wave 1)",x="Year",y=NULL)
-
-
-bind_rows(
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(perc=weighted.mean(porc_high,na.rm = T,w = ponderador_long_total),Status="1. high-status"),
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(perc=weighted.mean(porc_middle,na.rm = T,w=ponderador_long_total),Status="2. middle-status"),
-elsoc_long_2016_2022.2 %>%
-  group_by(ola) %>% 
-  summarise(perc=weighted.mean(porc_low,na.rm = T,w=ponderador_long_total),Status="3. low-status")
-) %>% 
-  na.omit() %>% 
-  ggplot(aes(x=factor(ola),y = perc, group=Status, color=Status)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(10,90),n.breaks = 20) +
-  scale_x_discrete(labels=c("2016","2018","2021")) +
-  labs(title = "Network percentage of high, middle and low occupations by year",x="Year",y=NULL) +
-  theme()
-
-bind_rows(
-elsoc_long_2016_2022.2 %>%
-  filter(ola==1) %>% 
-  group_by(egp8_r_label) %>% 
-  summarise(perc=weighted.mean(porc_high,na.rm = T,w=ponderador_long_total),Status="1. high-status"),
-elsoc_long_2016_2022.2 %>%
-  filter(ola==1) %>%   
-  group_by(egp8_r_label) %>% 
-  summarise(perc=weighted.mean(porc_middle,na.rm = T,w=ponderador_long_total),Status="2. middle-status"),
-elsoc_long_2016_2022.2 %>%
-  filter(ola==1) %>%   
-  group_by(egp8_r_label) %>% 
-  summarise(perc=weighted.mean(porc_low,na.rm = T,w=ponderador_long_total),Status="3. low-status")
-) %>% 
-  na.omit() %>% 
-  ggplot(aes(x=factor(egp8_r_label),y = perc, group=Status, color=Status)) +
-  geom_point()+
-  geom_line() +
-  scale_y_continuous(limits = c(10,90),n.breaks = 20) +
-  # scale_x_discrete(labels=c("2016","2018","2021")) +
-  labs(title = "Network percentage of high, middle and low occupations by Class (Wave 1)",x="Class",y=NULL) +
-  theme()
-```
-
-
 

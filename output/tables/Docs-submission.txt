@@ -1,0 +1,28 @@
+# In paper
+
+Table 1: Fixed effects regression for market justice prefereces
+Figure 1: Predicted values based in Table 1
+
+Table A1: Descriptive statistics used in the fixed effects
+
+
+# Supplementary analysis
+
+Explanation of the mobility profiles
+
+Table: Descriptive statistics 
+
+Table S1: Fixed effects regression for diversity on market justice in education, health and pensions
+
+Table S2: Fixed effects regression for mobility profiles, diversity and market justice
+
+Table S3: Fixed and random effects for mobiliy profiles, network diversity and market justice
+
+Table S4: Fixed and random effects for mobiliy profiles on network diversity (mobility-network link)
+
+# For internal use
+
+Table X1: FE for waves (1 t 3, 3 to 7, 1 to 7)
+Table X2: Cross-sectional analysis for Entropy, Variety and Diversity for market justice (each item and index)
+Table X3: Table S2 including the ISEI of the household head
+

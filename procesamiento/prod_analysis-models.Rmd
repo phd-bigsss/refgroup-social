@@ -218,7 +218,6 @@ summary(dfreg$isei08)
 summary(dfreg$isei08res)
 
 dfreg <- dfreg %>% sjmisc::row_means(isei08,isei08res,n = 1,var = "iseiavg",append = T)
-
 dfreg$iseiavg3 <- ntile(dfreg$iseiavg,3)
 dfreg$iseiavg3 <- as.factor(car::recode(dfreg$iseiavg3,"NA=99"))
 dfreg$iseiavg <- car::recode(dfreg$iseiavg,"NA=0")
@@ -342,10 +341,12 @@ dfreg %>%
          iseiavg3,
          iseires_hh3,
          isei_c,
-         iseiavg,
+         # iseiavg,
          age=m0_edad,
          sex=sexo,
          m02,
+         # univ,
+         # income=ing_pc_100,
          weights1=ponderador_long_total,
          ponderador02,
          ) %>%
@@ -509,7 +510,6 @@ isei_mobility$mobility_cat_adj[isei_mobility$toNEET==1] <- "Stable: NEET"
 isei_mobility$mobility_cat_adj[isei_mobility$toStLow==1] <-"Stable: low"
 isei_mobility$mobility_cat_adj[isei_mobility$toStMid==1] <-"Stable: middle" 
 isei_mobility$mobility_cat_adj[isei_mobility$toStHig==1] <-"Stable: high" 
-
 
 # Mobility profile including head of household ISEI ----------------------------
 # df1$mobility <- car::recode(df1$iseires_hh3,"99=0")
@@ -786,7 +786,6 @@ ggsave(
   units = "cm"
 )  
 
-
 ```
 
 
@@ -807,9 +806,10 @@ library(ggtext)
 library(kableExtra)
 library(knitr)
 library(marginaleffects)
+library(ggplot2)
+library(ggalluvial)
 
 load(file = here::here("input/data/proc/df1_panel.RData"))
-
 paneldata137 <- paneldata %>% 
   filter(time %in% c(1,3,7)) %>% 
   select(id,time,market_fs,just_educ,just_pension,just_salud,market,sesindex,iseiavg3,
@@ -831,7 +831,6 @@ paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
 paneldata137$isei <- factor(paneldata137$isei,levels = c(1,2,3,99))
 
 paneldata137$age <- paneldata137$age/10 
-
 paneldata137$mobility_profile <-car::recode(
   paneldata137$mobility_cat_adj,
   "c('Downward (Any to NEET)',
@@ -905,7 +904,7 @@ ggplot(df,
 
 
 # paneldata137$isei <- paneldata137$iseiavg3
-# paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
+paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
 
 # Analysis Mobility effects ----------------------------------------------------
 paneldata137$isei <- as.factor(paneldata137$isei)
@@ -1059,22 +1058,48 @@ htmlreg(list(market_mob_FE,market_mob_RE1,market_mob_RE2),
   custom.note = "%stars; Standard errors in parentheses."
 )
 
-
-
 # FE models -------------------------------------------------------------------
 pca_fit_v10<- psych::principal(r = as.data.frame(paneldata137) %>% select("entropy_contacts","know_total"),nfactors = 1,rotate = "varimax",scores = T,missing = T, cor = "cor",weight = paneldata137$weights1)
 paneldata137$diversityclass <- as.numeric(pca_fit_v10$scores)
 
 
-mkt_educ <- plm(just_educ ~ diversityclass+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1,model = "within",effect = "twoway")
-mkt_educ1 <- plm(just_educ ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1,model = "within",effect = "twoway")
-mkt_salu <- plm(just_salud ~ diversityclass+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
-mkt_salu1 <- plm(just_salud ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
-mkt_pens <- plm(just_pension ~ diversityclass+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
-mkt_pens1 <- plm(just_pension ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+mkt_educ <- plm(just_educ ~ diversityclass+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1,model = "within",effect = "twoway")
+mkt_educ1 <- plm(just_educ ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1,model = "within",effect = "twoway")
+mkt_salu <- plm(just_salud ~ diversityclass+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+mkt_salu1 <- plm(just_salud ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+mkt_pens <- plm(just_pension ~ diversityclass+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1, model="within",effect = "twoway")
+mkt_pens1 <- plm(just_pension ~ diversityclass+I(diversityclass^2)+age+I(age^2)+isei+sex+n_total+isei_avg,data=paneldata137,weights = weights1, model="within",effect = "twoway")
 
 services_models_fe <- list(mkt_educ,mkt_educ1,mkt_salu,mkt_salu1,mkt_pens,mkt_pens1)
 screenreg(services_models_fe,stars = c(0.001,0.01,0.05,0.1),digits = 3)
+
+custom.coef.map = list("isei1"="Low",
+                       "isei3"="High",
+                       "isei99"="NEET",
+                       "isei_avg"="Network status","n_total"="Network size",                       
+                       "diversityclass" = "Network diversity",
+                       "I(diversityclass^2)" = "Network diversity²",
+                       "age" = "Age",
+                       "I(age^2)" = "Age²"
+                       )
+htmlreg(
+  services_models_fe,single.row = F,
+  caption.above = T,digits = 3,
+  caption = "Table SX: Fixed effects regression for market justice preferences and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  custom.header = list("Education" =1:2,"Health" =3:4,"Pensions" =5:6),
+  custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes","Yes","Yes","Yes","Yes"),
+    "Time FE" = c("Yes", "Yes","Yes","Yes","Yes","Yes")
+  ),
+  include.rsquared = F,
+  include.adjrs = F,
+  file = "output/tables/tableSX.html",
+  custom.note = "%stars; Standard errors in parentheses."
+)
 
 pca_fit_v10<- psych::principal(r = as.data.frame(paneldata137) %>% select("entropy_contacts","know_total"),nfactors = 1,rotate = "varimax",scores = T,missing = T, cor = "cor",weight = paneldata137$weights1)
 paneldata137$diversityclass_3 <- as.numeric(pca_fit_v10$scores)
@@ -1106,7 +1131,6 @@ pca_fit_v10<- psych::principal(r = as.data.frame(paneldata137) %>% select("entro
 paneldata137$diversityclass <- as.numeric(pca_fit_v10$scores)
 
 paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
-
 
 mkt_just2   <- plm(market ~ isei+age+I(age^2),data=paneldata137,weights = weights1, model="within",effect = "twoways")
 mkt_just2.0 <- plm(market ~ n_total+isei_avg+age+I(age^2),data=paneldata137,weights = weights1, model="within",effect = "twoways")
@@ -1330,9 +1354,6 @@ ggplot(df_models, aes(x = estimate, y = term, color = model, group = model)) + g
 
 ggsave(plot = last_plot(), filename = "fig_coefplot.png", path = "output/images/", width = 2, height = 2, units = "cm", scale = 11)
 ```
-
-
-
 
 # Analysis mobility profiles 
 ```{r}

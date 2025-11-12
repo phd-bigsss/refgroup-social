@@ -552,10 +552,6 @@ pacman::p_load(dplyr, tidyr, purrr, sjmisc, lme4, plm, panelr, estimatr, ordinal
 load(file = here::here("input/data/proc/df1_panel_v2.RData"));paneldata137 <- paneldata 
 
 paneldata137 <- paneldata137 %>% group_by(id) %>% mutate(n_obs=n())
-frq(paneldata137$n_obs)
-
-# paneldata137 <- paneldata137 %>% filter(n_obs>=3)
-frq(paneldata137$time)
 
 # standardize predictors--------------------------------------------------------
 paneldata137$isei_avg <- as.numeric(scale(paneldata137$isei_avg))
@@ -564,22 +560,10 @@ paneldata137$isei <- factor(paneldata137$isei,levels = c(1,2,3,99))
 paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
 paneldata137$age <- paneldata137$age 
 paneldata137$neet <- ifelse(paneldata137$isei==99,1,0)
-paneldata137$ieet <- ifelse(paneldata137$isei %in% c(1,2,3),1,0)
 # If lab status is NEET, then ISEI =10
 paneldata137$isei_c <- ifelse(paneldata137$isei_c ==0,10,paneldata137$isei_c) 
-
-
-
-# paneldata137$isei_c <- paneldata137$isei_c/100
-# paneldata137$isei_d <- dplyr::ntile(paneldata137$isei_c,10)
 paneldata137$isco03_neet <- factor(paneldata137$isco03_neet)
 
-paneldata137$prof_h <- as.numeric(scale(paneldata137$num_high)) 
-paneldata137$prof_m <- as.numeric(scale(paneldata137$num_middle)) 
-paneldata137$prof_l <- as.numeric(scale(paneldata137$num_low)) 
-# paneldata137$market<- MLMusingR::group_center(as.numeric(scale(paneldata137$market)),grp = paneldata137$id)
-
-# FE models -------------------------------------------------------------------
 # Network diversity for longitudinal analysis
 pca_fit_v10 <- 
   psych::principal(r = as.data.frame(paneldata137) %>% 
@@ -635,107 +619,68 @@ htmlreg(
 )
 ```
 
-```{r tableME}
-paneldata137$mobility_profile <-car::recode(
-  paneldata137$mobility_cat_adj,
-  "c('Downward (Any to NEET)',
-    'Downward (H to L)',
-    'Downward (H to M)',
-    'Downward (M to L)') = 'Downward';
-  c('Upward (L to H)',
-    'Upward (L to M)',
-    'Upward (M to H)',
-    'Upward (NEET to Any)') = 'Upward'
-  "
-)
-paneldata137$mobility_profile <- relevel(paneldata137$mobility_profile,ref = "Stable: low")
-paneldata137$diversityclass_gm<- MLMusingR::group_mean(paneldata137$diversityclass,grp = paneldata137$id)
-paneldata137$diversityclass_gc<- MLMusingR::group_center(paneldata137$diversityclass,grp = paneldata137$id)
+```{r figure001}
+# Predicted means --------------------------------------------------------------
+diversity_values <- seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.1)
+int_diversity <- mkt_just2.2
+df_pred1 <- marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = diversity_values))
+marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = c(min(paneldata137$diversityclass), mean(paneldata137$diversityclass), max(paneldata137$diversityclass), -1, 1)))
 
-mkt_ME0 <- lmer(market ~ mobility_profile+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
-mkt_ME1 <- lmer(market ~ mobility_profile+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
-mkt_ME2 <- lmer(market ~ mobility_profile+diversityclass_gm+diversityclass_gc+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
-mkt_ME3 <- lmer(market ~ mobility_profile+diversityclass_gm+diversityclass_gc+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
-mkt_ME4 <- lmer(market ~ mobility_profile+diversityclass_gm+I(diversityclass_gm^2)+diversityclass_gc+I(diversityclass_gc^2)+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+plot_fig1 <- df_pred1 %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_y_continuous(limits = c(1.5, 2.5)) + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(int_diversity), ". 95% CIs. Based in Model 4 in Table 1"), x = "Network diversity (z-score)", y = "Market justice preferences") + theme(plot.caption = element_markdown(hjust = 1, size = 13), legend.position = "none")
+plot_fig1
+ggsave(plot = plot_fig1, filename = "figure1a.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm")
 
-mkt_ME5 <- lmer(market ~ mobility_profile+diversityclass_gm+diversityclass_gc*mobility_profile+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+diversity_values <- seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.1)
+int_diversity <- mkt_just2.3
+df_pred2 <- marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = diversity_values))
 
-# Table 3: Multilevel hybrid regression for market justice preferences, mobility trajectory and network diversity--------
-market_models_fe <- list(mkt_ME0,mkt_ME1,mkt_ME2,mkt_ME3)
-screenreg(market_models_fe,stars = c(0.001, 0.01, 0.05, 0.1),digits = 3)
-custom.coef.map = list(
-  "mobility_profileStable: NEET" = "Stable: NEET (ref.=Stable: Low)",
-  "mobility_profileDownward" = "Downward",
-  "mobility_profileUpward" = "Upward",
-  "mobility_profileStable: middle" = "Stable: Intermediate",
-  "mobility_profileStable: high" = "Stable: High",
-  "isei_avg"="Network status","n_total"="Network size",                       
-  "diversityclass_gm" = "Network diversity (BE)",
-  "diversityclass_gc" = "Network diversity (WE)",
-  "I(diversityclass_gm^2)" = "Network diversity² (BE)",
-  "I(diversityclass_gc^2)" = "Network diversity² (WE)",  
-  "age" = "Age",
-  "I(age^2)" = "Age²"
+marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = c(min(paneldata137$diversityclass), mean(paneldata137$diversityclass), max(paneldata137$diversityclass), -1, 1)))
+
+plot_fig1 <- df_pred2 %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_y_continuous(limits = c(1.5, 2.5)) + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(int_diversity), ". 95% CIs. Model 3."), x = "Network diversity (z-score)", y = "Market justice preferences") + theme(plot.caption = element_markdown(hjust = 1, size = 13), legend.position = "none")
+
+ggsave(plot = last_plot(), filename = "figure1b.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm")
+
+df_pred1$type <- "linear"
+df_pred2$type <- "quadratic"
+df_pred3<- bind_rows(df_pred1,df_pred2)
+
+library(ggtext)
+library(ggbreak)
+df_pred3 %>%
+  ggplot(aes(
+    x = diversityclass, 
+    y = estimate, 
+    ymin = conf.low, 
+    ymax = conf.high,
+    group = type,
+    colour = type,
+    fill = type
+  )) +
+  geom_ribbon(alpha = 0.08) +
+  geom_line(aes(alpha = type), linewidth = 1.2) +
+  geom_point(aes(alpha = type), size = 2) +
+  scale_alpha_manual(values = c("linear" = 1, "quadratic" = 0.4), guide = "none") +
+  scale_colour_manual(values = c("linear" = "#1b4f72", "quadratic" = "#aeb6bf"),labels= c("Model 4","Model 5")) +
+  scale_fill_manual(values = c("linear" = "#1b4f72", "quadratic" = "#aeb6bf"),labels= c("Model 4","Model 5")) +
+  scale_y_continuous(limits = c(1.75, 2.5)) +
+  scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) +
+  labs(
+    x = "Network diversity (z-score)",
+    y = "Market justice preferences",
+    caption = paste0("*Note*: N = ", nobs(int_diversity), ". 95% CIs. Based on Models in Table 1")
+  ) +
+  theme(
+    plot.caption = element_markdown(hjust = 1, size = 13),
+    legend.position = c(0.90, 0.1), # bottom right (x=right, y=bottom)
+    legend.title = element_blank(),
   )
-htmlreg(
-  market_models_fe,single.row = F,
-  caption.above = T,digits = 3,
-  caption = "Table S2: Multilevel between-within regression for market justice preferences, mobility trajectory and network diversity",
-  stars = c(0.001, 0.01, 0.05, 0.1),
-  # groups = list("ISEI (ref.= from Intermediate)" = 1:3
-  #               ),
-  custom.coef.map = custom.coef.map,
-  include.ci = FALSE,
-  omit.coef = "(Intercept)|(time)",
-  custom.gof.rows =  list(
-    "Unit FE" = c("Yes", "Yes","Yes","Yes"),
-    "Time FE" = c("Yes", "Yes","Yes","Yes")
-  ),
-  include.loglik = FALSE,include.aic = FALSE,
-  custom.gof.names = c(NA,NA,"Num. Individuals","Var: Group (Intercept)","Var: Residual"),
-  file = "output/tables/table004.html",
-  custom.note = "%stars; Standard errors in parentheses. BE and WE refer to between and within effects respectively"
-)
+ggsave(plot = last_plot(), filename = "figure1.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm",dpi = "retina")
 
-
-set1 <-  RColorBrewer::brewer.pal(n = 8, name = "Set1")
-options(ggplot2.discrete.fill = set1)
-options(ggplot2.discrete.colour = set1)
-ggplot2::theme_set(ggplot2::theme_bw())
-ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
-
-df_models <- 
-  bind_rows(broom::tidy(mkt_ME3, conf.int = TRUE)) %>% 
-  filter(term %in% c("mobility_profileDownward",
-                     "mobility_profileStable: high",
-                     "mobility_profileStable: middle",
-                     "mobility_profileStable: NEET",
-                     "mobility_profileUpward",
-                     "diversityclass_gm","diversityclass_gc")) 
-
-
-df_models$term <- factor(df_models$term,levels = rev(
-  c("mobility_profileStable: NEET",
-    "mobility_profileDownward",
-    "mobility_profileUpward",
-    "mobility_profileStable: middle",
-    "mobility_profileStable: high",
-    "diversityclass_gm","diversityclass_gc")),
-  labels =   rev(c("Stable: NEET (ref.=Stable: Low)",
-    "Downward",
-    "Upward",
-    "Stable: middle",
-    "Stable: high",
-    "Diversity (BE)","Diversity (WE)")))
-
-ggplot(df_models, aes(x = estimate, y = term)) + geom_vline(xintercept = 0, color = "red", size = 1) + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.1, color = "darkgray", size = 1, position = position_dodge(width = 0.2)) + geom_point(size = 3, position = position_dodge(width = 0.2)) + labs(title = NULL, subtitle = "market-skeptical ← → market-supportive", x = "Coefficient", caption = "*Note*: Multilevel hybrid regression.", y = NULL) + 
-  # scale_x_continuous(limits = c(-0.1, 0.35)) +
-  theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"), axis.title.x = element_text(margin = margin(t = 10), hjust = 0), axis.title.y = element_text(margin = margin(r = 10), hjust = 1), plot.subtitle = element_text(hjust = 0.5), legend.position = "none", axis.text.y = element_markdown(hjust = 1, size = 16), plot.caption = element_markdown(hjust = 1, size = 13))
-
-ggsave(plot = last_plot(), filename = "figureS02.png", path = "output/images/", width = 2, height = 1, units = "cm", scale = 11,dpi = "retina")
+marginaleffects::predictions(mkt_just2.2, condition = c("diversityclass"), newdata = datagrid(diversityclass = quantile(paneldata137$diversityclass,probs = c(0.2,0.5,0.8))))
 ```
 
-```{r table001-B}
+
+```{r table001-RE}
 paneldata137$mobility_profile <-car::recode(
   paneldata137$mobility_cat_adj,
   "c('Downward (Any to NEET)',
@@ -792,84 +737,6 @@ htmlreg(
   file = "output/tables/table003.html",
   custom.note = "%stars; Standard errors in parentheses."
 )
-```
-
-```{r figure001}
-# Predicted means --------------------------------------------------------------
-diversity_values <- seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.1)
-int_diversity <- mkt_just2.2
-df_pred1 <- marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = diversity_values))
-marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = c(min(paneldata137$diversityclass), mean(paneldata137$diversityclass), max(paneldata137$diversityclass), -1, 1)))
-
-plot_fig1 <- df_pred1 %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_y_continuous(limits = c(1.5, 2.5)) + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(int_diversity), ". 95% CIs. Based in Model 4 in Table 1"), x = "Network diversity (z-score)", y = "Market justice preferences") + theme(plot.caption = element_markdown(hjust = 1, size = 13), legend.position = "none")
-plot_fig1
-ggsave(plot = plot_fig1, filename = "figure1a.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm")
-
-diversity_values <- seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.1)
-int_diversity <- mkt_just2.3
-df_pred2 <- marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = diversity_values))
-
-marginaleffects::predictions(int_diversity, condition = c("diversityclass"), newdata = datagrid(diversityclass = c(min(paneldata137$diversityclass), mean(paneldata137$diversityclass), max(paneldata137$diversityclass), -1, 1)))
-
-plot_fig1 <- df_pred2 %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_y_continuous(limits = c(1.5, 2.5)) + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(int_diversity), ". 95% CIs. Model 3."), x = "Network diversity (z-score)", y = "Market justice preferences") + theme(plot.caption = element_markdown(hjust = 1, size = 13), legend.position = "none")
-
-ggsave(plot = last_plot(), filename = "figure1b.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm")
-
-df_pred1$type <- "linear"
-df_pred2$type <- "quadratic"
-df_pred3<- bind_rows(df_pred1,df_pred2)
-
-library(ggtext)
-library(ggbreak)
-df_pred3 %>%
-  ggplot(aes(
-    x = diversityclass, 
-    y = estimate, 
-    ymin = conf.low, 
-    ymax = conf.high,
-    group = type,
-    colour = type,
-    fill = type
-  )) +
-  geom_ribbon(alpha = 0.08) +
-  geom_line(aes(alpha = type), linewidth = 1.2) +
-  geom_point(aes(alpha = type), size = 2) +
-  scale_alpha_manual(values = c("linear" = 1, "quadratic" = 0.4), guide = "none") +
-  scale_colour_manual(values = c("linear" = "#1b4f72", "quadratic" = "#aeb6bf"),labels= c("Model 3","Model 4")) +
-  scale_fill_manual(values = c("linear" = "#1b4f72", "quadratic" = "#aeb6bf"),labels= c("Model 3","Model 4")) +
-  scale_y_continuous(limits = c(1.75, 2.5)) +
-  scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) +
-  labs(
-    x = "Network diversity (z-score)",
-    y = "Market justice preferences",
-    caption = paste0("*Note*: N = ", nobs(int_diversity), ". . 95% CIs. Based in Model 3 and 4 in Table 1")
-  ) +
-  theme(
-    plot.caption = element_markdown(hjust = 1, size = 13),
-    legend.position = c(0.90, 0.1), # bottom right (x=right, y=bottom)
-    legend.title = element_blank(),
-  )
-ggsave(plot = last_plot(), filename = "figure1.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm",dpi = "retina")
-
-marginaleffects::predictions(mkt_just2.2, condition = c("diversityclass"), newdata = datagrid(diversityclass = quantile(paneldata137$diversityclass,probs = c(0.2,0.5,0.8))))
-```
-
-```{r table001-coefplot}
-# Coef Plot---------------------------------------------------------------------
-pred_div_by_isei <- plot_predictions(mkt_just2.4, condition = list(diversityclass = seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.2), isei = c(1,2,3,99)), draw = F)
-pred_div_by_isei$isei <- car::recode(pred_div_by_isei$isei, "1='Low';2='to Middle';3='to High';99='to NEET'", levels = c("Low","to Middle","to High","to NEET"), as.factor = T)
-pred_div_by_isei$isei <- ordered(pred_div_by_isei$isei, levels = c("Low","to Middle","to High","to NEET"))
-
-pred_div_by_isei %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high, group = isei, color = isei)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(mkt_just2.4), ". 95% CIs."), x = "Network diversity (z-score)", y = "Market justice preferences (z-score)") + facet_grid(~isei) + theme(plot.caption = element_markdown(hjust = 1, size = 13))
-ggsave(plot = last_plot(), filename = "fig_interaction.png", path = "output/images/", width = 3, height = 1, units = "cm", scale = 10)
-
-df_models <- bind_rows(broom::tidy(mkt_just2.2, conf.int = TRUE) %>% mutate(model = "Model 1")) %>% filter(term %in% c("diversityclass","isei1","isei3")) %>% 
-  add_row(term = "isei2", estimate = NA, conf.low = NA, conf.high = NA, std.error = NA, model = "Model 1", .before = 1)
-df_models$term <- factor(df_models$term, levels = rev(c("isei2","isei1","isei3","diversityclass")), labels = rev(c("**ISEI (ref: Intermediate)**","Low","High","**Net. Diversity**")))
-
-ggplot(df_models, aes(x = estimate, y = term, color = model, group = model)) + geom_vline(xintercept = 0, color = "red", size = 1) + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.1, color = "darkgray", size = 1, position = position_dodge(width = 0.2)) + geom_point(size = 3, position = position_dodge(width = 0.2)) + labs(title = "Socioeconomic status, network diversity and market justice preferences", subtitle = "market-skeptical ← → market-supportive", x = "Standardized coefficient", caption = "*Note*: Fixed effects regression. NEET not shown.", y = NULL) + scale_x_continuous(limits = c(-0.4, 0.4)) + theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"), axis.title.x = element_text(margin = margin(t = 10), hjust = 0), axis.title.y = element_text(margin = margin(r = 10), hjust = 1), plot.subtitle = element_text(hjust = 0.5), legend.position = "none", axis.text.y = element_markdown(hjust = 1, size = 16), plot.caption = element_markdown(hjust = 1, size = 13))
-
-ggsave(plot = last_plot(), filename = "fig_coefplot.png", path = "output/images/", width = 2, height = 2, units = "cm", scale = 11)
 ```
 
 
@@ -975,7 +842,6 @@ df_occupations %>%
 ```{r figureS01}
 library(ggplot2)
 library(patchwork)
-
 # Calculate summary statistics
 m1 <- mean(paneldata137$know_total, na.rm = TRUE)
 sd1 <- sd(paneldata137$know_total, na.rm = TRUE)
@@ -1008,7 +874,127 @@ p1 + p2
 ggsave(plot = last_plot(), filename = "figureS01.png", path = "output/images", width = 2, height = 1, scale = 15, device = "png", units = "cm",dpi = "retina")
 ```
 
+## Between-Within hybrid models
 
+```{r tableME}
+paneldata137$mobility_profile <-car::recode(
+  paneldata137$mobility_cat_adj,
+  "c('Downward (Any to NEET)',
+    'Downward (H to L)',
+    'Downward (H to M)',
+    'Downward (M to L)') = 'Downward';
+  c('Upward (L to H)',
+    'Upward (L to M)',
+    'Upward (M to H)',
+    'Upward (NEET to Any)') = 'Upward'
+  "
+)
+paneldata137$mobility_profile <- relevel(paneldata137$mobility_profile,ref = "Stable: low")
+paneldata137$diversityclass_gm<- MLMusingR::group_mean(paneldata137$diversityclass,grp = paneldata137$id)
+paneldata137$diversityclass_gc<- MLMusingR::group_center(paneldata137$diversityclass,grp = paneldata137$id)
+
+paneldata137$n_total_gm<- MLMusingR::group_mean(paneldata137$n_total,grp = paneldata137$id)
+paneldata137$n_total_gc<- MLMusingR::group_center(paneldata137$n_total,grp = paneldata137$id)
+
+paneldata137$isei_avg_gm<- MLMusingR::group_mean(paneldata137$isei_avg,grp = paneldata137$id)
+paneldata137$isei_avg_gc<- MLMusingR::group_center(paneldata137$isei_avg,grp = paneldata137$id)
+
+mkt_ME0 <- lmer(market ~ mobility_profile+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+mkt_ME1 <- lmer(market ~ mobility_profile+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+mkt_ME2 <- lmer(market ~ mobility_profile+diversityclass_gm+diversityclass_gc+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+mkt_ME3 <- lmer(market ~ mobility_profile+diversityclass_gm+diversityclass_gc+n_total+isei_avg+age+I(age^2)+factor(time) +(1|id),data=paneldata137,weights = weights1)
+
+# Table 3: Multilevel hybrid regression for market justice preferences, mobility trajectory and network diversity--------
+market_models_fe <- list(mkt_ME0,mkt_ME1,mkt_ME2,mkt_ME3)
+screenreg(market_models_fe,stars = c(0.001, 0.01, 0.05, 0.1),digits = 3)
+custom.coef.map = list(
+  "mobility_profileStable: NEET" = "Stable: NEET (ref.=Stable: Low)",
+  "mobility_profileDownward" = "Downward",
+  "mobility_profileUpward" = "Upward",
+  "mobility_profileStable: middle" = "Stable: Intermediate",
+  "mobility_profileStable: high" = "Stable: High",
+  "isei_avg"="Network status","n_total"="Network size",                       
+  "diversityclass_gm" = "Network diversity (BE)",
+  "diversityclass_gc" = "Network diversity (WE)",
+  "I(diversityclass_gm^2)" = "Network diversity² (BE)",
+  "I(diversityclass_gc^2)" = "Network diversity² (WE)",  
+  "age" = "Age",
+  "I(age^2)" = "Age²"
+  )
+htmlreg(
+  market_models_fe,single.row = F,
+  caption.above = T,digits = 3,
+  caption = "Table S2: Multilevel between-within regression for market justice preferences, mobility trajectory and network diversity",
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  # groups = list("ISEI (ref.= from Intermediate)" = 1:3
+  #               ),
+  custom.coef.map = custom.coef.map,
+  include.ci = FALSE,
+  omit.coef = "(Intercept)|(time)",
+  custom.gof.rows =  list(
+    "Unit FE" = c("Yes", "Yes","Yes","Yes"),
+    "Time FE" = c("Yes", "Yes","Yes","Yes")
+  ),
+  include.loglik = FALSE,include.aic = FALSE,
+  custom.gof.names = c(NA,NA,"Num. Individuals","Var: Group (Intercept)","Var: Residual"),
+  file = "output/tables/table004.html",
+  custom.note = "%stars; Standard errors in parentheses. BE and WE refer to between and within effects respectively"
+)
+
+# Coefplot Multilevel Model------------------------------------------------------
+set1 <-  RColorBrewer::brewer.pal(n = 8, name = "Set1")
+options(ggplot2.discrete.fill = set1)
+options(ggplot2.discrete.colour = set1)
+ggplot2::theme_set(ggplot2::theme_bw())
+ggplot2::theme_update(text=ggplot2::element_text(size=15,  family="serif"))
+
+df_models <- 
+  bind_rows(broom::tidy(mkt_ME3, conf.int = TRUE)) %>% 
+  filter(term %in% c("mobility_profileDownward",
+                     "mobility_profileStable: high",
+                     "mobility_profileStable: middle",
+                     "mobility_profileStable: NEET",
+                     "mobility_profileUpward",
+                     "diversityclass_gm","diversityclass_gc")) 
+
+df_models90 <- 
+  bind_rows(broom::tidy(mkt_ME3, conf.int = TRUE,conf.level = 0.90)) %>% 
+  filter(term %in% c("mobility_profileDownward",
+                     "mobility_profileStable: high",
+                     "mobility_profileStable: middle",
+                     "mobility_profileStable: NEET",
+                     "mobility_profileUpward",
+                     "diversityclass_gm","diversityclass_gc")) 
+
+df_models$conf.low90<- df_models90$conf.low
+df_models$conf.high90<- df_models90$conf.high
+
+df_models$term <- factor(df_models$term,levels = rev(
+  c("mobility_profileStable: NEET",
+    "mobility_profileDownward",
+    "mobility_profileUpward",
+    "mobility_profileStable: middle",
+    "mobility_profileStable: high",
+    "diversityclass_gm","diversityclass_gc")),
+  labels =   rev(c("Stable: NEET (ref.=Stable: Low)",
+    "Downward",
+    "Upward",
+    "Stable: middle",
+    "Stable: high",
+    "Diversity (BE)","Diversity (WE)")))
+
+caption = paste0("*Note*: N = ", nobs(mkt_ME3), ". 95% and 90% CIs. Multilevel hybrid model include Gender, age, network size and network status are included as controls.")
+
+ggplot(df_models, aes(x = estimate, y = term)) + 
+  geom_vline(xintercept = 0, color = "red", size = 1) + 
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.1, color = "darkgray", size = 1, position = position_dodge(width = 0.2))+
+  geom_errorbarh(aes(xmin = conf.low90, xmax = conf.high90), height = 0.1, color = "darkblue", size = 1, position = position_dodge(width = 0.2))+ 
+  geom_point(size = 3, position = position_dodge(width = 0.2)) + 
+  labs(title = NULL, subtitle = "market-skeptical ←                                     → market-supportive", x = "Coefficients", caption = caption, y = NULL) + 
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"), axis.title.x = element_text(margin = margin(t = 10), hjust = 0), axis.title.y = element_text(margin = margin(r = 10), hjust = 1), plot.subtitle = element_text(hjust = 0.5), legend.position = "none", axis.text.y = element_markdown(hjust = 1, size = 16), plot.caption = element_markdown(hjust = 1, size = 13))
+
+ggsave(plot = last_plot(), filename = "figureS02.png", path = "output/images/", width = 2, height = 1, units = "cm", scale = 14,dpi = "retina")
+```
 
 ## Regression fixed effects by item
 ```{r tableS01}
@@ -1051,7 +1037,7 @@ htmlreg(
 )
 ```
 
-## Regression mobility profiles
+## RE Regression mobility profiles
 
 ```{r tableS02}
 paneldata137$mobility_profile <-car::recode(
@@ -1228,6 +1214,27 @@ htmlreg(list(div_we,div_re,div_re_1,div_re_2),
 ```
 
 # 03 For internal use
+
+## Coefplot Table 1
+```{r table001-coefplot}
+# Coef Plot---------------------------------------------------------------------
+pred_div_by_isei <- plot_predictions(mkt_just2.4, condition = list(diversityclass = seq(min(paneldata137$diversityclass), max(paneldata137$diversityclass), by = 0.2), isei = c(1,2,3,99)), draw = F)
+pred_div_by_isei$isei <- car::recode(pred_div_by_isei$isei, "1='Low';2='to Middle';3='to High';99='to NEET'", levels = c("Low","to Middle","to High","to NEET"), as.factor = T)
+pred_div_by_isei$isei <- ordered(pred_div_by_isei$isei, levels = c("Low","to Middle","to High","to NEET"))
+pred_div_by_isei %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high, group = isei, color = isei)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(mkt_just2.4), ". 95% CIs."), x = "Network diversity (z-score)", y = "Market justice preferences (z-score)") + facet_grid(~isei) + theme(plot.caption = element_markdown(hjust = 1, size = 13))
+ggsave(plot = last_plot(), filename = "fig_interaction.png", path = "output/images/", width = 3, height = 1, units = "cm", scale = 10)
+
+df_models <- bind_rows(broom::tidy(mkt_just2.2, conf.int = TRUE) %>% mutate(model = "Model 1")) %>% filter(term %in% c("diversityclass","isei1","isei3")) %>% 
+  add_row(term = "isei2", estimate = NA, conf.low = NA, conf.high = NA, std.error = NA, model = "Model 1", .before = 1)
+df_models$term <- factor(df_models$term, levels = rev(c("isei2","isei1","isei3","diversityclass")), labels = rev(c("**ISEI (ref: Intermediate)**","Low","High","**Net. Diversity**")))
+
+ggplot(df_models, aes(x = estimate, y = term, color = model, group = model)) + geom_vline(xintercept = 0, color = "red", size = 1) + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.1, color = "darkgray", size = 1, position = position_dodge(width = 0.2)) + geom_point(size = 3, position = position_dodge(width = 0.2)) + labs(title = "Socioeconomic status, network diversity and market justice preferences", subtitle = "market-skeptical ← → market-supportive", x = "Standardized coefficient", caption = "*Note*: Fixed effects regression. NEET not shown.", y = NULL) + scale_x_continuous(limits = c(-0.4, 0.4)) + theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"), axis.title.x = element_text(margin = margin(t = 10), hjust = 0), axis.title.y = element_text(margin = margin(r = 10), hjust = 1), plot.subtitle = element_text(hjust = 0.5), legend.position = "none", axis.text.y = element_markdown(hjust = 1, size = 16), plot.caption = element_markdown(hjust = 1, size = 13))
+
+ggsave(plot = last_plot(), filename = "fig_coefplot.png", path = "output/images/", width = 2, height = 2, units = "cm", scale = 11)
+```
+
+
+
 
 ## Regression fixed effect by waves
 

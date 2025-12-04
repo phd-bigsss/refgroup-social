@@ -120,7 +120,7 @@ Supervisors: </br>Dr. Patrick Sachweh (U. Bremen)</br>Dr. Olaf Groh-Samberg (U. 
 # Supplementary material
 
 
-```{r external-image, echo=FALSE, out.width="75%"}
+```{r , echo=FALSE, out.width="75%"}
 knitr::include_graphics("images/table0001.PNG")
 ```
 

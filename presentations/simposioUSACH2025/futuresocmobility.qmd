@@ -67,9 +67,9 @@ rm(list = ls())
 
 ::: {.column width="20%"}
 
-</br></br> </br></br></br></br> </br></br>
+</br></br> </br></br></br></br> </br></br></br></br></br></br></br>
 
-<!-- ![](images/jusmer-logo-vert.png) -->
+![](images/bigsss.jpg)
 
 
 :::

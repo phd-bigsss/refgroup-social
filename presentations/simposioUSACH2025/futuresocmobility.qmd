@@ -115,3 +115,13 @@ Supervisors: </br>Dr. Patrick Sachweh (U. Bremen)</br>Dr. Olaf Groh-Samberg (U. 
 # Thank you for your attention! 
 
 -   **Project GitHub:** <https://github.com/refgroup-social>
+
+
+# Supplementary material
+
+![](images/table0001.PNG) 
+
+# Supplementary material
+
+![](images/figureS02.png) 
+

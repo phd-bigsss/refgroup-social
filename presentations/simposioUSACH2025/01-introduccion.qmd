@@ -71,7 +71,7 @@
 
 ::: {.incremental .highlight-last style="font-size: 110%;"}
 - When market agents (e.g., firms) have a greater presence in welfare provision, the role of (**market**) income inequality can enhance inequalities in other social domains (e.g., education, health) [(**Lindh & McCall, 2022**)]{style="color: blue; font-weight: bold;"}
-- The set of principles and norms that entail greater relevance to merit-based rewards in the labor market has been addressed under the concept of market justice [(**Kluegel, Mason, & Wegener, 1999; Lane, 1986**)]{style="color: blue; font-weight: bold;"}. 
+- The set of **principles** and **norms** that entail greater relevance to merit-based rewards in the labor market has been addressed under the concept of **_market justice_** [(**Kluegel, Mason, & Wegener, 1999; Lane, 1986**)]{style="color: blue; font-weight: bold;"}. 
 - The market-based distribution of social services implies that it is legitimized that welfare is determined on the basis of payment capacity (out-of-pocket)  [(**Svallfors, 2007**)]{style="color: blue; font-weight: bold;"} 
 
 - Thus, labour market inequalities should also be reflected in people's attitudes towards the commodification of social services [(**Lindh, 2015**)]{style="color: blue; font-weight: bold;"}
@@ -80,7 +80,7 @@
 ## This study: More diverse, more skeptical?
 
 ::::: columns
-::: {.column width="50%" .incremental .highlight-last style="font-size: 85%;"}
+::: {.column width="50%" .incremental .highlight-last style="font-size: 90%;"}
 
 - By providing access to information—in this case, diversity—networks are likely to contribute to social learning processes [(**Druckman & Lupia, 2000; Lin, 2001**)]{style="color: blue; font-weight: bold;"}.
 
@@ -89,13 +89,13 @@
 - It is assumed that weak ties tend to change more over time as they are fed by diverse contacts [(**Granovetter, 1973**)]{style="color: blue; font-weight: bold;"}. 
 :::
 
-::: {.column width="50%" .incremental .highlight-last style="font-size: 85%;"}
+::: {.column width="50%" .incremental .highlight-last style="font-size: 90%;"}
 
-- Diversity could affects attitudes as it changes existential standards as they play a role of “referential structures” that provide concrete benchmarks for fairness evaluations [(*Immergut & Schneider, 2020; Shepelak & Alwin, 1986*)]{style="color: blue; font-weight: bold;"}.
-- Diversity offers non-redundant information and unfamiliar perspectives [(*Burt, 2004; Vedres, 2022*)]{style="color: blue; font-weight: bold;"}.
+- Diversity could affects attitudes as it changes _**existential standards**_ as they play a role of _**“referential structures”**_ that provide concrete benchmarks for fairness evaluations [(**Immergut & Schneider, 2020; Shepelak & Alwin, 1986**)]{style="color: blue; font-weight: bold;"}.
+- Diversity offers non-redundant information and unfamiliar perspectives [(**Burt, 2004; Vedres, 2022**)]{style="color: blue; font-weight: bold;"}.
 - As individuals encounter different life experiences, they may develop critical views towards market justice (**_market skepticism hypothesis_**)
 
-- $H_1$: the greater the changes in network diversity, the less support market justice. 
+* $H_1$: the greater the changes in network diversity, the less support market justice. 
 
 :::
 

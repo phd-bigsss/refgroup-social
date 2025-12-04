@@ -1,0 +1,140 @@
+# Context {background-color="#491106ff"}
+
+## PhD dissertation
+
+### BIGSSS - GloWel - Global Inequality, the Middle Classes and the Welfare State" (DAAD)
+
+:::: {.columns}
+
+::: {.column width="20%"}
+
+![](images/glowel.jpg)
+
+:::
+
+::: {.column width="80%"}
+
+::: {.incremental .highlight-last style="font-size: 90%;"}
+
+- Study 1: Iturra-Sanhueza, Julio. 2025. “Class-Based Network Segregation, Economic Inequality, and Redistributive Preferences across Societies.” **_European Sociological Review_**, November 24, jcaf048. https://doi.org/10.1093/esr/jcaf048. 
+
+- [Study 2]{style="color: blue; font-weight: bold;"}: Iturra-Sanhueza, Julio. 2025. More Diverse, More Skeptical? How Changes in Class-based Network Diversity Shape Public Support for Commodified Welfare Services: Longitudinal Evidence from Chile. **_Under review_**
+
+- Study 3: Iturra-Sanhueza, Julio, Castillo, Juan Carlos, Groh-Samberg, Olaf. Ties that hold: Factorial Survey Experiment on Social Cohesion and Group Composition in Chile **_Working paper_**
+  
+- More info: [https://github.com/phd-bigsss](https://github.com/phd-bigsss)
+
+:::
+
+:::
+
+::::
+
+
+## Social networks and political attitudes 
+
+### Social networks and attitudes towards inequality
+
+::: {.incremental .highlight-last style="font-size: 120%;"}
+- Attitudes in the economic domain can be affected by: (i) social influence and (ii) segregation [(**Lindh et al., 2021; Paskov & Weisstanner, 2022**)]{style="color: blue; font-weight: bold;"}. For example, the status of family ties can affect support for government income redistribution [(**Paskov & Weisstanner, 2022**)]{style="color: blue; font-weight: bold;"}.
+
+- Increased social integration in diverse networks contributes to critical views on inequality [(**Otero & Mendoza, 2023**)]{style="color: blue; font-weight: bold;"}. Networks operate as inferential spaces that highlight the link between economic inequality and rewards in the labour market [(**Mijs, 2018**)]{style="color: blue; font-weight: bold;"}. 
+:::
+
+
+## Social networks and political attitudes
+
+### Individual structural position and attitudes 
+
+::: {.incremental .highlight-last style="font-size: 120%;"}
+- Structurally advantaged positions in the labor market justify inequality to a greater extent compared to those in greater labor market risk, low-demanded skills, and lower income [(**Castillo, Salgado, Carrasco, & Laffert, 2024; Lee & Stacey, 2023**)]{style="color: blue; font-weight: bold;"}. 
+
+- Gap: most of the theories on the class-attitude link are based in cross-sectional evidence. 
+
+- Therefore, they have underscored the role of “class experiences” – understood as the socialization processes linked to individual experiences within the class structure across the life course [(**Ares, 2020; Helgason & Rehm, 2024; Langsæther, Evans, & O’Grady, 2022**)]{style="color: blue; font-weight: bold;"}.  
+:::
+
+## Attitudes toward market distributions
+
+### Social services in the market 
+::: {.incremental .highlight-last style="font-size: 120%;"}
+- In contexts of high inequality and modest public provision of welfare, the capacity of citizens to contribute or pay largely constraints access to welfare services [(**Immergut & Schneider, 2020; Lindh, 2015; Castillo et al 2024**)]{style="color: blue; font-weight: bold;"}
+
+- Unlike state redistribution, in these contexts market actors plays a salient role the provision of welfare [(**Svallfors, 2006**)]{style="color: blue; font-weight: bold;"} 
+
+- Welfare is object of commodification on a gradient from market-led, mixed or state provision - can be traded as commodity, valued and priced [(**Busemeyer & Iversen, 2020**)]{style="color: blue; font-weight: bold;"}
+:::
+
+## Attitudes toward market distributions
+
+### Inequality and market justice 
+
+::: {.incremental .highlight-last style="font-size: 110%;"}
+- When market agents (e.g., firms) have a greater presence in welfare provision, the role of (**market**) income inequality can enhance inequalities in other social domains (e.g., education, health) [(**Lindh & McCall, 2022**)]{style="color: blue; font-weight: bold;"}
+- The set of principles and norms that entail greater relevance to merit-based rewards in the labor market has been addressed under the concept of market justice [(**Kluegel, Mason, & Wegener, 1999; Lane, 1986**)]{style="color: blue; font-weight: bold;"}. 
+- The market-based distribution of social services implies that it is legitimized that welfare is determined on the basis of payment capacity (out-of-pocket)  [(**Svallfors, 2007**)]{style="color: blue; font-weight: bold;"} 
+
+- Thus, labour market inequalities should also be reflected in people's attitudes towards the commodification of social services [(**Lindh, 2015**)]{style="color: blue; font-weight: bold;"}
+:::
+
+## This study: More diverse, more skeptical?
+
+::::: columns
+::: {.column width="50%" .incremental .highlight-last style="font-size: 85%;"}
+
+- By providing access to information—in this case, diversity—networks are likely to contribute to social learning processes [(**Druckman & Lupia, 2000; Lin, 2001**)]{style="color: blue; font-weight: bold;"}.
+
+- Networks as a “social convoy” [(Kahn and Antonucci, 1980)]{style="color: blue; font-weight: bold;"} that structure information and support over the life course [(**Hollstein, 2023**)]{style="color: blue; font-weight: bold;"}. 
+
+- It is assumed that weak ties tend to change more over time as they are fed by diverse contacts [(**Granovetter, 1973**)]{style="color: blue; font-weight: bold;"}. 
+:::
+
+::: {.column width="50%" .incremental .highlight-last style="font-size: 85%;"}
+
+- Diversity could affects attitudes as it changes existential standards as they play a role of “referential structures” that provide concrete benchmarks for fairness evaluations [(*Immergut & Schneider, 2020; Shepelak & Alwin, 1986*)]{style="color: blue; font-weight: bold;"}.
+- Diversity offers non-redundant information and unfamiliar perspectives [(*Burt, 2004; Vedres, 2022*)]{style="color: blue; font-weight: bold;"}.
+- As individuals encounter different life experiences, they may develop critical views towards market justice (**_market skepticism hypothesis_**)
+
+- $H_1$: the greater the changes in network diversity, the less support market justice. 
+
+:::
+
+:::::
+
+## Chile: unequal but prosperous 
+
+
+::::: columns
+::: {.column width="50%" .incremental .highlight-last style="font-size: 110%;"}
+
+### Recent history
+- Structural reforms mainly in period of adjustment in the 1980s [(**Arrizabalo, 1995**)]{style="color: blue; font-weight: bold;"} 
+As a result, the "size" of the welfare state was reduced, encouraging the private sector by liberalising or subsidising private services [(**Ferre, 2023**)]{style="color: blue; font-weight: bold;"}
+- On the basis of social policy design (**inclusiveness, generosity and equity**) it has been characterised as a closer to a "liberal" social policy regime [(**Huber & Stephens, 2012**)]{style="color: blue; font-weight: bold;"}
+
+:::
+
+::: {.column width="50%" .incremental .highlight-last style="font-size: 110%;"}
+### Chile today
+- In 2024, Chile has been classified as a **middle-income country** (14,226.5 per cap. U$2015) with a **low poverty rate** (6.5%).
+- However, in terms of income distribution it shows a **high** level of income inequality (Gini = 0.47; P90/10 = 15.9) and **modest** levels of redistribution (5%)
+- Important: Chile shows a high-presence of private-based provision of welfare services (see next slide)
+:::
+:::::
+
+
+## 
+
+![](images/welfare1.png)
+
+## 
+
+![](images/welfare2.png)
+
+## 
+
+![](images/welfare3.png)
+
+
+# To what extent do individual changes in socioeconomic network diversity influence changes in market justice preferences? {background-color="#491106ff"}
+

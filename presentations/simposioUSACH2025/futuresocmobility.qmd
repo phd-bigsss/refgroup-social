@@ -1,0 +1,117 @@
+---
+bibliography: "bib/tesis-magister.bib"
+csl: "bib/apa6.csl"
+lang: es
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+    R.options:
+      
+      knitr.graphics.auto_pdf: true
+format:
+  revealjs:
+    #logo: images/edumer.png
+    slide-number: true
+    theme: "libs/edumer.scss"
+    auto-stretch: false
+    title-slide-attributes:
+      visibility: false
+    transition: fade
+    transition-speed: slow
+# data-background-image: images/cover.jpg
+# data-background-size: cover
+    auto-play-media: true
+    mathjax: "default"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(knitr)
+knitr::opts_chunk$set(echo = F,
+                      warning = F,
+                      error = F, 
+                      message = F) 
+```
+
+```{r}
+#| label: packages
+#| include: false
+
+if (! require("pacman")) install.packages("pacman")
+
+pacman::p_load(tidyverse, 
+               here,
+               kableExtra)
+
+options(scipen=999)
+rm(list = ls())
+```
+
+
+```{r}
+#| label: data
+#| include: false
+#| echo: false
+#| results: false
+
+# source(file = here("processing/prod_analysis.R"))
+
+```
+
+::: columns
+
+
+::: {.column width="20%"}
+
+</br></br> </br></br></br></br> </br></br>
+
+<!-- ![](images/jusmer-logo-vert.png) -->
+
+
+:::
+
+::: {.column .column-right width="80%"}
+
+
+# More Diverse, More Skeptical? How Changes in Class-based Network Diversity Shape Public Support for Commodified Welfare Services: Longitudinal Evidence from Chile.  {style="font-size:20px; text-align:right; line-height:1.1;"}
+
+<!-- ### **Asociaciones con estratificación social y creencias en la meritocracia**{style="font-size:35px; text-align:right; line-height:1.1; margin-top:10px;"} -->
+
+------------------------------------------------------------------------
+
+**Julio Iturra-Sanhueza^1,2^**
+
+::: {.blue2 .medium style="line-height:0.4; margin-top:0; margin-bottom:0;"}
+
+**^1^Bremen International Graduate School of Social Sciences, University Bremen** </br>
+**^2^Research Center Social Cohesion - RISC**
+
+Supervisors: </br>Dr. Patrick Sachweh (U. Bremen)</br>Dr. Olaf Groh-Samberg (U. Bremen)</br>Dr. Simone Schneider (U. Pompeu Fabra)
+
+:::
+
+### The future of social mobility - 3 - 4 December 2025, Santiago de Chile{style="color:black"}
+
+:::
+:::
+
+{{< include 01-introduccion.qmd >}}
+
+{{< include 02-metodos.qmd >}}
+
+{{< include 03-resultados.qmd >}}
+
+{{< include 04-conclusiones.qmd >}}
+
+<!-- ## Referencias -->
+
+<!-- ::: {#refs} -->
+<!-- ::: -->
+
+# Thank you for your attention! 
+
+-   **Project GitHub:** <https://github.com/refgroup-social>

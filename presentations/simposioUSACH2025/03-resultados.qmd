@@ -1,0 +1,50 @@
+# Results {background-color="#491106ff"}
+
+## Longitudinal results on network diversity and market justice 
+
+:::: {.columns}
+
+::: {.column width="60%"}
+
+```{r , echo=FALSE, out.width="100%"}
+knitr::include_graphics("images/fig_coefplot.png")
+```
+
+:::
+
+::: {.column width="40%; font-size: 90%;"}
+
+* Individual changes in occupational status, showing that increasing the socioeconomic status has a negative but non-significant relationship with support for market justice preferences (β = -0.011, p>0.05). 
+
+* One standard deviation increase in diversity drives a decrease of -0.067 in the market justice scale (β =-0.067, p<0.001).
+
+* Robust to the inclusion of network size and network socioeconomic status
+
+:::
+
+::::  
+
+
+## Changes on network diversity 
+
+:::: {.columns}
+
+::: {.column width="70%"}
+<!-- </br> -->
+
+```{r , echo=FALSE, out.width="120%"}
+knitr::include_graphics("images/figure1.png")
+```
+
+:::
+
+::: {.column width="30%; font-size: 90%;"}
+
+* When network diversity is at the 20th percentile, the average predicted market justice preference is 2.20 (95% CI: 2.12 – 2.28), and it decreases to 2.08 when it is at the 80th percentile (95% CI: 2.02 – 2.14). 
+
+* According to the original scale (1 to 5) of the market justice preferences index, this difference represents a change of around 3%.
+
+:::
+
+::::  
+

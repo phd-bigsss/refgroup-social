@@ -676,6 +676,8 @@ df_pred3 %>%
   )
 ggsave(plot = last_plot(), filename = "figure1.png", path = "output/images", width = 1.5, height = 1, scale = 15, device = "png", units = "cm",dpi = "retina")
 
+ggsave(plot = last_plot(), filename = "figure1.pdf", path = "output/images", width = 1.5, height = 1, scale = 15, device = "pdf", units = "cm",dpi = "retina")
+
 marginaleffects::predictions(mkt_just2.2, condition = c("diversityclass"), newdata = datagrid(diversityclass = quantile(paneldata137$diversityclass,probs = c(0.2,0.5,0.8))))
 ```
 
@@ -1224,13 +1226,44 @@ pred_div_by_isei$isei <- ordered(pred_div_by_isei$isei, levels = c("Low","to Mid
 pred_div_by_isei %>% ggplot(aes(y = estimate, x = diversityclass, ymin = conf.low, ymax = conf.high, group = isei, color = isei)) + geom_ribbon(alpha = 0.1, color = "black") + geom_line(size = 1, color = "black") + geom_point(size = 2, color = "black") + scale_x_continuous(limits = c(min(paneldata137$diversityclass), max(paneldata137$diversityclass))) + labs(caption = paste0("*Note*: N = ", nobs(mkt_just2.4), ". 95% CIs."), x = "Network diversity (z-score)", y = "Market justice preferences (z-score)") + facet_grid(~isei) + theme(plot.caption = element_markdown(hjust = 1, size = 13))
 ggsave(plot = last_plot(), filename = "fig_interaction.png", path = "output/images/", width = 3, height = 1, units = "cm", scale = 10)
 
-df_models <- bind_rows(broom::tidy(mkt_just2.2, conf.int = TRUE) %>% mutate(model = "Model 1")) %>% filter(term %in% c("diversityclass","isei1","isei3")) %>% 
-  add_row(term = "isei2", estimate = NA, conf.low = NA, conf.high = NA, std.error = NA, model = "Model 1", .before = 1)
-df_models$term <- factor(df_models$term, levels = rev(c("isei2","isei1","isei3","diversityclass")), labels = rev(c("**ISEI (ref: Intermediate)**","Low","High","**Net. Diversity**")))
+df_models <- bind_rows(broom::tidy(mkt_just2.3, conf.int = TRUE) %>% mutate(model = "Model 1")) %>% filter(term %in% c("diversityclass","isei_c"))  
+  # add_row(term = "isei_c", estimate = NA, conf.low = NA, conf.high = NA, std.error = NA, model = "Model 1", .before = 1)
+df_models$term <- factor(df_models$term, levels = rev(c("isei_c","diversityclass")), labels = rev(c("**ISEI**","**Net. Diversity**")))
 
-ggplot(df_models, aes(x = estimate, y = term, color = model, group = model)) + geom_vline(xintercept = 0, color = "red", size = 1) + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.1, color = "darkgray", size = 1, position = position_dodge(width = 0.2)) + geom_point(size = 3, position = position_dodge(width = 0.2)) + labs(title = "Socioeconomic status, network diversity and market justice preferences", subtitle = "market-skeptical ← → market-supportive", x = "Standardized coefficient", caption = "*Note*: Fixed effects regression. NEET not shown.", y = NULL) + scale_x_continuous(limits = c(-0.4, 0.4)) + theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"), axis.title.x = element_text(margin = margin(t = 10), hjust = 0), axis.title.y = element_text(margin = margin(r = 10), hjust = 1), plot.subtitle = element_text(hjust = 0.5), legend.position = "none", axis.text.y = element_markdown(hjust = 1, size = 16), plot.caption = element_markdown(hjust = 1, size = 13))
+ggplot(df_models, aes(
+  x = estimate,
+  y = term,
+  color = model,
+  group = model
+)) + geom_vline(xintercept = 0,
+                color = "red",
+                size = 1) + geom_errorbarh(
+                  aes(xmin = conf.low, xmax = conf.high),
+                  height = 0.1,
+                  color = "darkgray",
+                  size = 1,
+                  position = position_dodge(width = 0.2)
+                ) + geom_point(size = 3, position = position_dodge(width = 0.2)) + labs(
+                  title = "Socioeconomic status, network diversity and market justice preferences",
+                  subtitle = "market-skeptical ← → market-supportive",
+                  x = "Coefficient",
+                  caption = "*Note*: Two-way fixed effects regression. Age and Age2 included",
+                  y = NULL
+                ) + scale_x_continuous(limits = c(-0.2, 0.1)) + theme(
+                  panel.grid.minor = element_blank(),
+                  plot.title = element_text(face = "bold",size = 13),
+                  legend.title = element_text(face = "bold"),
+                  strip.text = element_text(face = "bold"),
+                  axis.title = element_text(face = "bold"),
+                  axis.title.x = element_text(margin = margin(t = 10), hjust = 0),
+                  axis.title.y = element_text(margin = margin(r = 10), hjust = 1),
+                  plot.subtitle = element_text(hjust = 0.5),
+                  legend.position = "none",
+                  axis.text.y = element_markdown(hjust = 1, size = 16),
+                  plot.caption = element_markdown(hjust = 1, size = 13)
+                )
 
-ggsave(plot = last_plot(), filename = "fig_coefplot.png", path = "output/images/", width = 2, height = 2, units = "cm", scale = 11)
+ggsave(plot = last_plot(), filename = "fig_coefplot.png", path = "presentations/simposioUSACH2025/images", width = 2, height = 2, units = "cm", scale = 9)
 ```
 
 
@@ -1662,4 +1695,60 @@ ggsave(
 )  
 ```
 
+
+# For slides
+
+```{r}
+pacman::p_load(dplyr, tidyr, purrr, sjmisc, lme4, plm, panelr, estimatr, ordinal, 
+               marginaleffects, MLMusingR, correlation, 
+               ggplot2, ggExtra, ggalluvial, ggtext, sjPlot, broom, 
+               texreg, knitr, kableExtra)
+load(file = here::here("input/data/proc/df1_panel_v2.RData"));paneldata137 <- paneldata 
+
+paneldata137 <- paneldata137 %>% group_by(id) %>% mutate(n_obs=n())
+
+# standardize predictors--------------------------------------------------------
+paneldata137$isei_avg <- as.numeric(scale(paneldata137$isei_avg))
+paneldata137$n_total <- as.numeric(scale(paneldata137$n_total))
+paneldata137$isei <- factor(paneldata137$isei,levels = c(1,2,3,99))
+paneldata137$isei <- relevel(paneldata137$isei,ref = 2)
+paneldata137$age <- paneldata137$age 
+paneldata137$neet <- ifelse(paneldata137$isei==99,1,0)
+# If lab status is NEET, then ISEI =10
+paneldata137$isei_c <- ifelse(paneldata137$isei_c ==0,10,paneldata137$isei_c) 
+paneldata137$isco03_neet <- factor(paneldata137$isco03_neet)
+
+# Network diversity for longitudinal analysis
+pca_fit_v10 <- 
+  psych::principal(r = as.data.frame(paneldata137) %>% 
+                     select("entropy_contacts","know_total"),
+                   nfactors = 1,rotate = "varimax",scores = T,missing = T, 
+                   cor = "cor",weight = paneldata137$weights1)
+paneldata137$diversityclass <- as.numeric(pca_fit_v10$scores)
+
+df1 <- as.data.frame(paneldata137)
+
+psych::alpha(df1 %>% filter(time==1) %>%  select(just_educ,just_salud,just_pension)) #.82
+psych::alpha(df1 %>% filter(time==3) %>%  select(just_educ,just_salud,just_pension)) #.86
+psych::alpha(df1 %>% filter(time==5) %>%  select(just_educ,just_salud,just_pension)) #.79
+psych::alpha(df1 %>% filter(time==7) %>%  select(just_educ,just_salud,just_pension)) #.83
+
+labels<- sjlabelled::get_labels(df1[,c("just_pension","just_salud","just_educ")])
+
+df1 %>% select("just_pension","just_salud","just_educ") %>% 
+  sjlabelled::set_label(label = sjlabelled::get_label(df1[,c("just_pension","just_salud","just_educ")])) %>% 
+  sjlabelled::set_labels(labels = labels) %>% 
+  sjPlot::plot_stackfrq(show.total = F,wrap.legend.labels = 10,wrap.labels = 20,axis.labels = c("pensions ..."," health care ...","education for their children ..."),) + 
+  labs(title = "It is fair that people with higher incomes have better [service] than people with lower income") +
+  theme(legend.position = "bottom")
+
+ggsave(plot = last_plot(), filename = "figureP1.png", path = "output/images", width = 2, height = 1.2, scale = 15, device = "png", units = "cm")
+```
+
+```{r}
+diversity_mob_RE<- lm(diversityclass~ factor(time),data=paneldata137,weights = weights1)
+plot_predictions(diversity_mob_RE,condition = "time") + labs(y="Network diversity (z-score)",x=NULL) + scale_x_discrete(labels=c("Time 1","Time 2","Time 3"))
+
+ggsave(plot = last_plot(), filename = "figureP2.png", path = "output/images", width = 1, height = 1, scale = 15, device = "png", units = "cm")
+```
 

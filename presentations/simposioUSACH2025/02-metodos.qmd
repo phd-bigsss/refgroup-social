@@ -73,7 +73,7 @@ In this study:
 ::: {.column width="60%"}
 
 ```{r , echo=FALSE, out.width="100%"}
-knitr::include_graphics("images/figureP3.png")
+knitr::include_graphics("images/figureP3.PNG")
 ```
 :::
 

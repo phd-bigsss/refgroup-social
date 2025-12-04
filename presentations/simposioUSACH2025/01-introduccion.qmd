@@ -125,15 +125,15 @@ As a result, the "size" of the welfare state was reduced, encouraging the privat
 
 ## 
 
-![](images/welfare1.png)
+![](images/welfare1.PNG)
 
 ## 
 
-![](images/welfare2.png)
+![](images/welfare2.PNG)
 
 ## 
 
-![](images/welfare3.png)
+![](images/welfare3.PNG)
 
 
 # To what extent do individual changes in socioeconomic network diversity influence changes in market justice preferences? {background-color="#491106ff"}
